@@ -66,8 +66,8 @@ Deno.serve(async (req: Request) => {
       const errorDetail = result.error;
       console.error(`Gemini API Error (${status}):`, JSON.stringify(errorDetail, null, 2));
 
-      return new Response(JSON.stringify({ 
-        error: errorDetail?.message || "Gemini API Error", 
+      return new Response(JSON.stringify({
+        error: errorDetail?.message || "Gemini API Error",
         status,
         suggestion: status === 429 ? "Rate limit hit. Please wait a moment before trying again." : undefined
       }), {
@@ -77,7 +77,7 @@ Deno.serve(async (req: Request) => {
     }
 
     const text = result.candidates[0].content.parts[0].text;
-    console.log("Gemini 2.0 Success:", text);
+    console.log("Gemini 3.1 Success:", text);
 
     return new Response(text, {
       headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Connection': 'keep-alive' },

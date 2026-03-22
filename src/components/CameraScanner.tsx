@@ -50,7 +50,17 @@ export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
       });
 
       if (error) throw error;
-      setAnalysis(data);
+      
+      // Clean data before setting state
+      const cleanedData: FoodAnalysis = {
+        food_name: data.food_name || "Unknown Food",
+        calories: parseNumeric(data.calories),
+        protein: parseNumeric(data.protein),
+        carbs: parseNumeric(data.carbs),
+        fat: parseNumeric(data.fat),
+      };
+      
+      setAnalysis(cleanedData);
     } catch (err: unknown) {
       console.error("Analysis Error:", err);
       const message =
@@ -64,6 +74,13 @@ export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
     }
   };
 
+  const parseNumeric = (val: string | number | null | undefined): number => {
+    if (val === null || val === undefined) return 0;
+    const str = String(val).replace(/[^0-9.]/g, '');
+    const num = parseFloat(str);
+    return isNaN(num) ? 0 : num;
+  };
+
   const saveLog = async () => {
     if (!analysis) return;
     const {
@@ -71,14 +88,14 @@ export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
     } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Ensure all numeric values are actually numbers (sometimes AI returns strings)
+    // Ensure all numeric values are clean
     const logData = {
       user_id: user.id,
       food_name: analysis.food_name,
-      calories: parseFloat(analysis.calories.toString()),
-      protein: parseFloat(analysis.protein.toString()) || 0,
-      carbs: parseFloat(analysis.carbs.toString()) || 0,
-      fat: parseFloat(analysis.fat.toString()) || 0,
+      calories: analysis.calories,
+      protein: analysis.protein,
+      carbs: analysis.carbs,
+      fat: analysis.fat,
       image_url: null
     };
 
@@ -222,7 +239,7 @@ export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
                     Protein
                   </p>
                   <p className="text-xl font-black text-zinc-900">
-                    {analysis.protein}g
+                    {analysis.protein || 0}g
                   </p>
                   <div className="h-1 bg-pink-500 rounded-full mt-3 w-3/4 opacity-40"></div>
                 </div>
@@ -231,7 +248,7 @@ export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
                     Carbs
                   </p>
                   <p className="text-xl font-black text-zinc-900">
-                    {analysis.carbs}g
+                    {analysis.carbs || 0}g
                   </p>
                   <div className="h-1 bg-blue-500 rounded-full mt-3 w-3/4 opacity-40"></div>
                 </div>
@@ -240,7 +257,7 @@ export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
                     Fat
                   </p>
                   <p className="text-xl font-black text-zinc-900">
-                    {analysis.fat}g
+                    {analysis.fat || 0}g
                   </p>
                   <div className="h-1 bg-zinc-900 rounded-full mt-3 w-3/4 opacity-40"></div>
                 </div>
