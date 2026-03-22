@@ -1,18 +1,24 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+// Setup type definitions for built-in Supabase Runtime APIs
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-serve(async (req) => {
+interface RequestPayload {
+  image: string;
+}
+
+console.info('analyze-food server started');
+
+Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    console.log("--- Request Received (Gemini 2.0 Flash) ---");
-    const { image } = await req.json();
+    const { image }: RequestPayload = await req.json();
 
     const apiKey = Deno.env.get('GEMINI_API_KEY');
     if (!apiKey) throw new Error("GEMINI_API_KEY is not set");
@@ -25,14 +31,13 @@ serve(async (req) => {
 
     const prompt = "Analyze the food in this image. Return ONLY a JSON object with: food_name, calories, protein, carbs, fat. No formatting, no markdown.";
 
-    // ใช้ Gemini 2.0 Flash (หรือ gemini-2.0-flash-exp) เพื่อความเร็วสูงสุด
-    const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+    // ใช้ Gemini 3.1 Flash-Lite เพื่อความเร็วสูงสุดและประหยัดที่สุด
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent?key=${apiKey}`;
 
-    const response = await fetch(url, {
+    const geminiResponse = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-goog-api-key": apiKey // ส่งผ่าน Header ตามแบบที่คุณให้มา
       },
       body: JSON.stringify({
         contents: [
@@ -54,25 +59,36 @@ serve(async (req) => {
       })
     });
 
-    const result = await response.json();
+    const result = await geminiResponse.json();
 
-    if (result.error) {
-      console.error("Gemini API Error:", result.error);
-      throw new Error(result.error.message);
+    if (!geminiResponse.ok || result.error) {
+      const status = geminiResponse.status;
+      const errorDetail = result.error;
+      console.error(`Gemini API Error (${status}):`, JSON.stringify(errorDetail, null, 2));
+
+      return new Response(JSON.stringify({ 
+        error: errorDetail?.message || "Gemini API Error", 
+        status,
+        suggestion: status === 429 ? "Rate limit hit. Please wait a moment before trying again." : undefined
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Connection': 'keep-alive' },
+        status: status === 429 ? 429 : 500,
+      });
     }
 
     const text = result.candidates[0].content.parts[0].text;
     console.log("Gemini 2.0 Success:", text);
 
     return new Response(text, {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Connection': 'keep-alive' },
       status: 200,
     });
 
-  } catch (error: any) {
-    console.error("Edge Function Error:", error.message);
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "An unexpected error occurred";
+    console.error("Edge Function Error:", message);
+    return new Response(JSON.stringify({ error: message }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Connection': 'keep-alive' },
       status: 500,
     });
   }

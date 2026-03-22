@@ -43,7 +43,6 @@ A premium-feel, high-performance Calorie Tracker PWA built with zero-cost infras
 
 - `VITE_SUPABASE_URL`: Supabase project URL.
 - `VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY`: Primary API key.
-- `VITE_SUPABASE_ANON_KEY`: Fallback anon key.
 
 ---
 

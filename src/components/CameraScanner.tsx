@@ -1,5 +1,13 @@
 import React, { useState, useRef } from "react";
-import { Camera, Upload, Check, Sparkles, X } from "lucide-react";
+import {
+  Camera,
+  Upload,
+  Check,
+  Sparkles,
+  X,
+  ChevronRight,
+  Zap
+} from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 interface FoodAnalysis {
@@ -21,7 +29,6 @@ export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Reset state
     setAnalysis(null);
     setImage(null);
 
@@ -43,13 +50,15 @@ export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
       });
 
       if (error) throw error;
-      if (!data) throw new Error("No data returned from analysis");
-
       setAnalysis(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Analysis Error:", err);
-      alert("Error analyzing image. Please try again.");
-      setImage(null); // Reset on error
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Error analyzing image. Please try again.";
+      alert(message);
+      setImage(null);
     } finally {
       setLoading(false);
     }
@@ -72,32 +81,39 @@ export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
       image_url: null
     });
 
-    if (error) {
-      alert("Error saving log: " + error.message);
-    } else {
-      setAnalysis(null);
-      setImage(null);
-      onSave();
-    }
-  };
-
-  const cancelScan = () => {
-    setImage(null);
-    setAnalysis(null);
-    setLoading(false);
+    if (!error) onSave();
   };
 
   return (
-    <div className="space-y-4 text-gray-900">
-      {/* State 1: Choose Action (No Image yet) */}
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-1000 h-full flex flex-col">
+      {/* Header */}
       {!image && (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2 mb-4">
+          <h2 className="text-5xl font-black tracking-tighter text-zinc-900 leading-none">
+            Scan <br />
+            <span className="text-purple-600 italic">Food.</span>
+          </h2>
+          <p className="text-zinc-400 font-bold text-[10px] tracking-[0.2em] uppercase">
+            AI Powered Nutrition Analysis
+          </p>
+        </div>
+      )}
+
+      {/* State 1: Choose Action */}
+      {!image && (
+        <div className="grid grid-cols-1 gap-4 flex-1">
           <button
             onClick={() => cameraInputRef.current?.click()}
-            className="group flex flex-col items-center justify-center p-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-3xl shadow-lg hover:shadow-xl transition-all active:scale-95 text-white h-40"
+            className="group relative overflow-hidden bg-zinc-900 rounded-[48px] p-10 flex flex-col items-center justify-center text-white tap-effect shadow-2xl h-64"
           >
-            <Camera className="w-10 h-10 mb-3 group-hover:scale-110 transition-transform" />
-            <span className="font-bold tracking-wide">Take Photo</span>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/20 blur-[60px] -mr-16 -mt-16"></div>
+            <Camera className="w-16 h-16 mb-6 group-hover:scale-110 transition-transform duration-500" />
+            <span className="text-2xl font-black tracking-tighter">
+              Snap Photo
+            </span>
+            <p className="text-zinc-500 text-[10px] font-black tracking-[0.3em] uppercase mt-2">
+              Use Camera
+            </p>
             <input
               ref={cameraInputRef}
               type="file"
@@ -110,11 +126,11 @@ export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
 
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="group flex flex-col items-center justify-center p-8 bg-white border-2 border-dashed border-gray-200 rounded-3xl hover:border-purple-300 hover:bg-purple-50 transition-all active:scale-95 text-gray-600 h-40"
+            className="group bg-zinc-50 border-2 border-dashed border-zinc-200 rounded-[48px] p-10 flex flex-col items-center justify-center text-zinc-400 tap-effect hover:bg-white hover:border-purple-200 transition-all h-48"
           >
-            <Upload className="w-10 h-10 mb-3 group-hover:-translate-y-1 transition-transform text-gray-400 group-hover:text-purple-500" />
-            <span className="font-bold tracking-wide group-hover:text-purple-600">
-              Upload
+            <Upload className="w-10 h-10 mb-4 group-hover:-translate-y-2 transition-transform duration-500" />
+            <span className="text-lg font-black tracking-tight text-zinc-600">
+              Choose from Library
             </span>
             <input
               ref={fileInputRef}
@@ -127,95 +143,108 @@ export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
         </div>
       )}
 
-      {/* State 2 & 3: Image Preview & Loading/Result */}
+      {/* State 2 & 3: Preview & Analysis */}
       {image && (
-        <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 overflow-hidden">
-          {/* Image Container */}
-          <div className="relative h-64 bg-gray-900">
+        <div className="flex-1 flex flex-col space-y-6">
+          <div className="relative h-[30vh] md:h-64 rounded-[56px] overflow-hidden shadow-2xl border-4 border-white group">
             <img
               src={image}
               alt="Food"
-              className="w-full h-full object-cover opacity-90"
+              className="w-full h-full object-cover"
             />
 
-            {/* Loading Overlay */}
             {loading && (
-              <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm flex flex-col items-center justify-center text-white z-10">
-                <div className="relative">
-                  <div className="w-16 h-16 border-4 border-purple-500/30 rounded-full"></div>
-                  <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
-                  <Sparkles className="w-6 h-6 text-purple-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse" />
+              <div className="absolute inset-0 bg-zinc-900/80 backdrop-blur-md flex flex-col items-center justify-center text-white z-20">
+                <div className="relative w-20 h-20 mb-6 flex items-center justify-center">
+                  <div className="absolute inset-0 border-4 border-purple-500/20 rounded-full"></div>
+                  <div className="absolute inset-0 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                  <Zap className="w-8 h-8 text-purple-400 fill-purple-400 animate-pulse" />
                 </div>
-                <p className="mt-4 font-bold tracking-wide animate-pulse">
-                  AI is analyzing...
+                <p className="font-black tracking-[0.3em] text-[10px] uppercase text-zinc-400">
+                  Scanning Pixels
+                </p>
+                <p className="text-2xl font-black tracking-tighter mt-1 animate-pulse italic">
+                  Thinking...
                 </p>
               </div>
             )}
 
-            {/* Cancel Button */}
             {!loading && (
               <button
-                onClick={cancelScan}
-                className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full backdrop-blur transition-colors"
+                onClick={() => {
+                  setImage(null);
+                  setAnalysis(null);
+                }}
+                className="absolute top-6 right-6 w-12 h-12 bg-black/40 hover:bg-black/60 text-white rounded-full backdrop-blur-xl flex items-center justify-center transition-all tap-effect z-30"
               >
-                <X className="w-5 h-5" />
+                <X className="w-6 h-6" />
               </button>
             )}
           </div>
 
-          {/* Analysis Result */}
           {analysis && !loading && (
-            <div className="p-6 animate-in slide-in-from-bottom-4 fade-in duration-500">
-              <div className="flex items-start justify-between mb-6">
-                <div>
-                  <div className="text-xs font-bold text-purple-600 tracking-wider uppercase mb-1 flex items-center gap-1">
-                    <Sparkles className="w-3 h-3" /> AI Result
+            <div className="bg-white rounded-[56px] p-8 border border-zinc-50 shadow-[0_20px_50px_rgba(0,0,0,0.05)] space-y-8 animate-in slide-in-from-bottom-8 duration-700">
+              <div className="flex items-start justify-between">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-purple-500" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-purple-500">
+                      AI Analysis Complete
+                    </span>
                   </div>
-                  <h3 className="font-black text-2xl text-gray-900 leading-tight">
+                  <h3 className="text-4xl font-black tracking-tighter text-zinc-900 leading-none italic">
                     {analysis.food_name}
                   </h3>
                 </div>
-                <div className="text-right bg-purple-50 p-2 rounded-2xl border border-purple-100 min-w-[80px]">
-                  <div className="text-2xl font-black text-purple-700">
+                <div className="bg-zinc-900 p-6 rounded-4xl text-center min-w-25 shadow-xl">
+                  <p className="text-3xl font-black text-white leading-none tracking-tighter">
                     {analysis.calories}
-                  </div>
-                  <div className="text-[10px] font-bold text-purple-400 uppercase tracking-wider">
-                    kcal
-                  </div>
+                  </p>
+                  <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mt-1">
+                    KCAL
+                  </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3 mb-6">
-                <div className="bg-gray-50 p-3 rounded-2xl">
-                  <div className="text-[10px] text-gray-400 font-bold mb-1">
-                    PROTEIN
-                  </div>
-                  <div className="font-bold text-gray-900">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-zinc-50 p-5 rounded-3xl border border-zinc-100/50">
+                  <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">
+                    Protein
+                  </p>
+                  <p className="text-xl font-black text-zinc-900">
                     {analysis.protein}g
-                  </div>
+                  </p>
+                  <div className="h-1 bg-pink-500 rounded-full mt-3 w-3/4 opacity-40"></div>
                 </div>
-                <div className="bg-gray-50 p-3 rounded-2xl">
-                  <div className="text-[10px] text-gray-400 font-bold mb-1">
-                    CARBS
-                  </div>
-                  <div className="font-bold text-gray-900">
+                <div className="bg-zinc-50 p-5 rounded-3xl border border-zinc-100/50">
+                  <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">
+                    Carbs
+                  </p>
+                  <p className="text-xl font-black text-zinc-900">
                     {analysis.carbs}g
-                  </div>
+                  </p>
+                  <div className="h-1 bg-blue-500 rounded-full mt-3 w-3/4 opacity-40"></div>
                 </div>
-                <div className="bg-gray-50 p-3 rounded-2xl">
-                  <div className="text-[10px] text-gray-400 font-bold mb-1">
-                    FAT
-                  </div>
-                  <div className="font-bold text-gray-900">{analysis.fat}g</div>
+                <div className="bg-zinc-50 p-5 rounded-3xl border border-zinc-100/50">
+                  <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">
+                    Fat
+                  </p>
+                  <p className="text-xl font-black text-zinc-900">
+                    {analysis.fat}g
+                  </p>
+                  <div className="h-1 bg-zinc-900 rounded-full mt-3 w-3/4 opacity-40"></div>
                 </div>
               </div>
 
               <button
                 onClick={saveLog}
-                className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white py-4 rounded-2xl font-bold hover:bg-black hover:shadow-lg transition-all active:scale-[0.98]"
+                className="w-full bg-zinc-900 text-white h-20 rounded-4xl font-black text-lg shadow-2xl flex items-center justify-center gap-3 tap-effect hover:bg-black transition-all group"
               >
-                <Check className="w-5 h-5" />
-                Add to Diary
+                <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Check className="w-6 h-6" />
+                </div>
+                Log This Meal
+                <ChevronRight className="w-6 h-6 text-zinc-500" />
               </button>
             </div>
           )}

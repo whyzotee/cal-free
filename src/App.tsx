@@ -6,14 +6,41 @@ import { Dashboard } from "./components/Dashboard";
 import { CameraScanner } from "./components/CameraScanner";
 import { Home, Camera, User as UserIcon } from "lucide-react";
 import { cn } from "./lib/utils";
+import type { Session } from "@supabase/supabase-js";
+
+interface Profile {
+  id: string;
+  weight: number;
+  height: number;
+  age: number;
+  gender: "male" | "female" | "other";
+  activity_level:
+    | "sedentary"
+    | "lightly_active"
+    | "moderately_active"
+    | "very_active"
+    | "extra_active";
+  tdee: number;
+  updated_at?: string;
+}
 
 function App() {
-  const [session, setSession] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"home" | "scan" | "profile">(
     "home"
   );
+
+  const fetchProfile = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .single();
+    if (!error && data) setProfile(data);
+    setLoading(false);
+  };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -36,36 +63,26 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single();
-    if (!error && data) setProfile(data);
-    setLoading(false);
-  };
-
   if (loading) return null;
+
   if (!session) return <Auth />;
+
   if (!profile)
     return (
       <div className="p-6 h-full bg-white">
-        <OnboardingForm onComplete={(tdee) => setProfile({ tdee })} />
+        <OnboardingForm onComplete={() => fetchProfile(session!.user.id)} />
       </div>
     );
 
   return (
     <div className="h-screen flex flex-col bg-white overflow-hidden selection:bg-purple-100">
       {/* Scrollable Content Area */}
-      <main className="flex-1 overflow-y-auto px-6 pt-12 pb-40 no-scrollbar">
-        <div className="max-w-md mx-auto h-full">
-          {activeTab === "home" && (
-            <Dashboard tdee={profile.tdee} key={Date.now()} />
-          )}
+      <main className="flex-1 overflow-y-auto px-4 sm:px-6 pt-12 no-scrollbar">
+        <div className="max-w-md mx-auto min-h-full flex flex-col">
+          {activeTab === "home" && <Dashboard tdee={profile.tdee} />}
 
           {activeTab === "scan" && (
-            <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 h-full">
+            <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 flex-1">
               <CameraScanner
                 onSave={() => {
                   setActiveTab("home");
@@ -77,11 +94,11 @@ function App() {
 
           {activeTab === "profile" && (
             <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 space-y-4">
-              <h2 className="text-4xl font-black tracking-tight text-zinc-900 mb-8">
+              <h2 className="text-4xl font-black tracking-tight text-zinc-900 mb-8 px-2">
                 Me
               </h2>
-              <div className="bg-zinc-50 p-10 rounded-[48px] border border-zinc-100 flex flex-col items-center gap-6">
-                <div className="w-24 h-24 bg-zinc-900 rounded-[32px] flex items-center justify-center text-white shadow-xl">
+              <div className="bg-zinc-50 p-6 sm:p-10 rounded-[48px] border border-zinc-100 flex flex-col items-center gap-6">
+                <div className="w-24 h-24 bg-zinc-900 rounded-4xl flex items-center justify-center text-white shadow-xl">
                   <UserIcon className="w-10 h-10" />
                 </div>
                 <div className="text-center">
@@ -94,18 +111,21 @@ function App() {
                 </div>
                 <button
                   onClick={() => supabase.auth.signOut()}
-                  className="mt-4 bg-white text-red-500 px-8 py-4 rounded-[24px] font-black text-xs uppercase tracking-widest border border-red-100 shadow-sm active:scale-95 transition-all"
+                  className="mt-4 bg-white text-red-500 px-8 py-4 rounded-3xl font-black text-xs uppercase tracking-widest border border-red-100 shadow-sm active:scale-95 transition-all"
                 >
                   Log Out
                 </button>
               </div>
             </div>
           )}
+
+          {/* Spacer for Bottom Nav */}
+          <div className="h-44 w-full shrink-0" />
         </div>
       </main>
 
       {/* iOS Style Bottom Tab Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 px-8 pb-12 pt-4 ios-blur border-t border-zinc-100/50">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 px-6 sm:px-8 pb-12 pt-4 ios-blur border-t border-zinc-100/50">
         <div className="max-w-md mx-auto flex justify-between items-center">
           <button
             onClick={() => setActiveTab("home")}
