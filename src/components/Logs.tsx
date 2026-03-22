@@ -19,7 +19,7 @@ export function Logs() {
         .from("calorie_logs")
         .select("*")
         .order("created_at", { ascending: false });
-      
+
       if (data) setLogs(data);
       setLoading(false);
     }
@@ -40,7 +40,9 @@ export function Logs() {
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-4">
           <div className="w-12 h-12 border-4 border-zinc-100 border-t-zinc-900 rounded-full animate-spin" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Loading your history</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
+            Loading your history
+          </p>
         </div>
       ) : logs.length === 0 ? (
         <div className="bg-zinc-50 rounded-[48px] p-12 text-center space-y-4">
@@ -53,15 +55,15 @@ export function Logs() {
       ) : (
         <div className="space-y-4">
           {logs.map((log) => (
-            <div 
-              key={log.id} 
+            <div
+              key={log.id}
               className="bg-zinc-50 p-6 rounded-[32px] border border-zinc-100 flex items-center gap-5 group hover:bg-white hover:border-zinc-200 transition-all shadow-sm active:scale-[0.98]"
             >
               <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-zinc-400 group-hover:bg-purple-50 group-hover:text-purple-500 transition-colors shadow-sm">
                 <Utensils className="w-6 h-6" />
               </div>
               <div className="flex-1">
-                <h4 className="font-black text-zinc-900 text-lg leading-tight truncate max-w-[140px]">
+                <h4 className="font-black text-zinc-900 text-lg leading-tight truncate max-w-35">
                   {log.food_name}
                 </h4>
                 <div className="flex items-center gap-1.5 mt-1 text-zinc-400">

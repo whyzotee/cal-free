@@ -1,10 +1,15 @@
 import {
   createRootRouteWithContext,
   Link,
-  Outlet,
-  useRouter
+  Outlet
 } from "@tanstack/react-router";
-import { Home, Camera, User as UserIcon, BarChart3, History } from "lucide-react";
+import {
+  Home,
+  Camera,
+  User as UserIcon,
+  BarChart3,
+  History
+} from "lucide-react";
 import { cn } from "../lib/utils";
 import { useAppStore } from "../store/useAppStore";
 import { useEffect } from "react";
@@ -18,8 +23,6 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 
 function RootComponent() {
   const { session, profile, loading, initialize, fetchProfile } = useAppStore();
-  const router = useRouter();
-  const currentPath = router.state.location.pathname;
 
   useEffect(() => {
     const unsubscribe = initialize();
@@ -63,41 +66,40 @@ function RootComponent() {
       <nav className="fixed bottom-0 left-0 right-0 z-50 px-4 sm:px-6 pb-12 pt-4 ios-blur border-t border-zinc-100/50">
         <div className="max-w-md mx-auto flex justify-between items-center">
           {navItems.map((item) => {
-            const isActive = currentPath === item.to;
             const Icon = item.icon;
 
-            if (item.isAction) {
-              return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className={cn(
-                    "w-16 h-16 rounded-[28px] flex items-center justify-center shadow-2xl transition-all tap-effect active:scale-90 -mt-12 border-[6px] border-white",
-                    isActive
-                      ? "bg-purple-600 text-white shadow-purple-300"
-                      : "bg-zinc-900 text-white shadow-zinc-400"
-                  )}
-                >
-                  <Icon className="w-8 h-8" />
-                </Link>
-              );
-            }
-
             return (
-              <Link
-                key={item.to}
-                to={item.to}
-                className={cn(
-                  "flex flex-col items-center gap-1 transition-all duration-300 tap-effect px-2",
-                  isActive ? "text-zinc-900" : "text-zinc-300"
-                )}
-              >
-                <Icon
-                  className={cn("w-7 h-7", isActive && "fill-zinc-900")}
-                />
-                <span className="text-[8px] font-black uppercase tracking-[0.2em]">
-                  {item.label}
-                </span>
+              <Link key={item.to} to={item.to} className="tap-effect">
+                {({ isActive }) => {
+                  if (item.isAction) {
+                    return (
+                      <div
+                        className={cn(
+                          "w-16 h-16 rounded-[28px] flex items-center justify-center shadow-2xl transition-all -mt-12 border-[6px] border-white",
+                          isActive
+                            ? "bg-purple-600 text-white shadow-purple-300 scale-110"
+                            : "bg-zinc-900 text-white shadow-zinc-400"
+                        )}
+                      >
+                        <Icon className="w-8 h-8" />
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div
+                      className={cn(
+                        "flex flex-col items-center gap-1 transition-all duration-300 px-2",
+                        isActive ? "text-zinc-900" : "text-zinc-300"
+                      )}
+                    >
+                      <Icon className="w-7 h-7" />
+                      <span className="text-[8px] font-black uppercase tracking-[0.2em]">
+                        {item.label}
+                      </span>
+                    </div>
+                  );
+                }}
               </Link>
             );
           })}

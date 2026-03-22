@@ -129,3 +129,17 @@
     @apply font-sans;
   }
 }
+
+@utility ios-blur {
+  background-color: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+@utility tap-effect {
+  &:active {
+    transform: scale(0.96);
+    opacity: 0.8;
+  }
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
