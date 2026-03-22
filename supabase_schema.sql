@@ -6,6 +6,7 @@ CREATE TABLE profiles (
   age INT,
   gender TEXT CHECK (gender IN ('male', 'female', 'other')),
   activity_level TEXT CHECK (activity_level IN ('sedentary', 'lightly_active', 'moderately_active', 'very_active', 'extra_active')),
+  goal TEXT CHECK (goal IN ('weight_loss', 'maintenance', 'cut', 'bulk')) DEFAULT 'maintenance',
   tdee INT, -- Estimated Daily Total Energy Expenditure
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );

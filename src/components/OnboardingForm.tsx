@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { supabase } from "../lib/supabase";
 import { Button } from "./ui/button";
-import { ChevronRight, User, Ruler, Weight, Activity } from "lucide-react";
+import { ChevronRight, User, Ruler, Weight, Activity, Target } from "lucide-react";
 
 const onboardingSchema = z.object({
   age: z.number().min(1).max(120),
@@ -17,7 +17,8 @@ const onboardingSchema = z.object({
     "moderately_active",
     "very_active",
     "extra_active"
-  ])
+  ]),
+  goal: z.enum(["weight_loss", "maintenance", "cut", "bulk"])
 });
 
 type OnboardingData = z.infer<typeof onboardingSchema>;
@@ -30,6 +31,13 @@ const activityFactors = {
   extra_active: 1.9
 };
 
+const goalAdjustments = {
+  weight_loss: -500,
+  cut: -300,
+  maintenance: 0,
+  bulk: 300
+};
+
 export const OnboardingForm: React.FC<{
   onComplete: (tdee: number) => void;
 }> = ({ onComplete }) => {
@@ -38,7 +46,10 @@ export const OnboardingForm: React.FC<{
     handleSubmit,
     formState: { errors, isSubmitting }
   } = useForm<OnboardingData>({
-    resolver: zodResolver(onboardingSchema)
+    resolver: zodResolver(onboardingSchema),
+    defaultValues: {
+      goal: "maintenance"
+    }
   });
 
   const onSubmit = async (data: OnboardingData) => {
@@ -52,7 +63,8 @@ export const OnboardingForm: React.FC<{
       bmr -= 78; // Neutral average
     }
 
-    const tdee = Math.round(bmr * activityFactors[data.activity_level]);
+    const maintenanceCalories = bmr * activityFactors[data.activity_level];
+    const targetCalories = Math.round(maintenanceCalories + goalAdjustments[data.goal]);
 
     const {
       data: { user }
@@ -66,13 +78,14 @@ export const OnboardingForm: React.FC<{
       weight: data.weight,
       height: data.height,
       activity_level: data.activity_level,
-      tdee: tdee
+      goal: data.goal,
+      tdee: targetCalories
     });
 
     if (error) {
       alert("Error saving profile: " + error.message);
     } else {
-      onComplete(tdee);
+      onComplete(targetCalories);
     }
   };
 
@@ -90,6 +103,38 @@ export const OnboardingForm: React.FC<{
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
         <div className="space-y-6">
+          {/* Goal selection (New) */}
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 ml-4">
+              <Target className="w-3 h-3" /> Your Goal
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { id: 'weight_loss', label: 'Weight Loss', desc: '-500 kcal' },
+                { id: 'cut', label: 'Cut', desc: '-300 kcal' },
+                { id: 'maintenance', label: 'Maintain', desc: '0 kcal' },
+                { id: 'bulk', label: 'Bulk', desc: '+300 kcal' }
+              ].map((item) => (
+                <label key={item.id} className="relative group cursor-pointer">
+                  <input
+                    type="radio"
+                    {...register("goal")}
+                    value={item.id}
+                    className="peer sr-only"
+                  />
+                  <div className="h-20 bg-zinc-50 rounded-3xl p-4 flex flex-col justify-center border-2 border-transparent peer-checked:border-purple-600 peer-checked:bg-white transition-all group-hover:bg-zinc-100 peer-checked:group-hover:bg-white">
+                    <span className="font-black text-xs uppercase tracking-wider text-zinc-900 leading-tight">
+                      {item.label}
+                    </span>
+                    <span className="font-bold text-[10px] text-zinc-400 uppercase tracking-widest mt-1">
+                      {item.desc}
+                    </span>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+
           {/* Age & Gender Row */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">

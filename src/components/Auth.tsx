@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Mail, Lock, Loader2 } from 'lucide-react';
+import { cn } from '../lib/utils';
 
 export const Auth: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -30,52 +31,57 @@ export const Auth: React.FC = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-8 bg-white rounded-3xl shadow-xl border border-gray-100 text-gray-900">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-black text-purple-700 mb-2">Zero-Cost Calorie</h2>
-        <p className="text-gray-400">AI-Powered Nutrition Tracking</p>
-      </div>
-
-      <form onSubmit={handleAuth} className="space-y-4">
-        <div className="relative">
-          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:outline-none transition"
-            required
-          />
-        </div>
-        <div className="relative">
-          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:outline-none transition"
-            required
-          />
+    <div className="min-h-screen flex items-center justify-center bg-zinc-50 px-4">
+      <div className="w-full max-w-md p-10 sm:p-12 bg-white rounded-[48px] shadow-2xl shadow-zinc-200/50 border border-zinc-100 text-zinc-900 animate-in fade-in zoom-in duration-700">
+        <div className="text-center mb-10">
+          <div className="w-20 h-20 bg-purple-600 rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-xl shadow-purple-200">
+            <Loader2 className={cn("w-10 h-10 text-white", !loading && "animate-none")} />
+          </div>
+          <h2 className="text-4xl font-black text-zinc-900 tracking-tight mb-2 italic">CALFREE</h2>
+          <p className="text-zinc-400 font-bold text-xs uppercase tracking-[0.2em]">AI-Powered Nutrition</p>
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full py-3 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-700 transition flex items-center justify-center space-x-2"
-        >
-          {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isSignUp ? 'Create Account' : 'Sign In')}
-        </button>
-      </form>
+        <form onSubmit={handleAuth} className="space-y-4">
+          <div className="relative group">
+            <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-300 group-focus-within:text-purple-500 transition-colors" />
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full pl-14 pr-6 py-5 bg-zinc-50 border-none rounded-3xl focus:ring-4 focus:ring-purple-100 focus:bg-white transition-all font-medium text-zinc-900 placeholder:text-zinc-300"
+              required
+            />
+          </div>
+          <div className="relative group">
+            <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-300 group-focus-within:text-purple-500 transition-colors" />
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full pl-14 pr-6 py-5 bg-zinc-50 border-none rounded-3xl focus:ring-4 focus:ring-purple-100 focus:bg-white transition-all font-medium text-zinc-900 placeholder:text-zinc-300"
+              required
+            />
+          </div>
 
-      <div className="mt-6 text-center">
-        <button
-          onClick={() => setIsSignUp(!isSignUp)}
-          className="text-sm text-purple-600 font-medium hover:underline"
-        >
-          {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
-        </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-5 bg-zinc-900 text-white font-black rounded-3xl shadow-xl shadow-zinc-200 active:scale-95 transition-all flex items-center justify-center gap-3 uppercase text-xs tracking-widest mt-4 disabled:opacity-50"
+          >
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isSignUp ? 'Create Account' : 'Sign In')}
+          </button>
+        </form>
+
+        <div className="mt-8 text-center">
+          <button
+            onClick={() => setIsSignUp(!isSignUp)}
+            className="text-xs text-zinc-400 font-black uppercase tracking-widest hover:text-purple-600 transition-colors"
+          >
+            {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+          </button>
+        </div>
       </div>
     </div>
   );

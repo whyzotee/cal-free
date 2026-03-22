@@ -71,17 +71,27 @@ export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
     } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { error } = await supabase.from("calorie_logs").insert({
+    // Ensure all numeric values are actually numbers (sometimes AI returns strings)
+    const logData = {
       user_id: user.id,
       food_name: analysis.food_name,
-      calories: analysis.calories,
-      protein: analysis.protein,
-      carbs: analysis.carbs,
-      fat: analysis.fat,
+      calories: parseFloat(analysis.calories.toString()),
+      protein: parseFloat(analysis.protein.toString()) || 0,
+      carbs: parseFloat(analysis.carbs.toString()) || 0,
+      fat: parseFloat(analysis.fat.toString()) || 0,
       image_url: null
-    });
+    };
 
-    if (!error) onSave();
+    console.log("Saving log data:", logData);
+
+    const { error } = await supabase.from("calorie_logs").insert(logData);
+
+    if (error) {
+      console.error("Save Log Error:", error);
+      alert("Failed to save log: " + error.message);
+    } else {
+      onSave();
+    }
   };
 
   return (
