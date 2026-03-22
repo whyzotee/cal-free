@@ -4,7 +4,7 @@ import { Auth } from "./components/Auth";
 import { OnboardingForm } from "./components/OnboardingForm";
 import { Dashboard } from "./components/Dashboard";
 import { CameraScanner } from "./components/CameraScanner";
-import { Home, Camera, User as UserIcon, LogOut } from "lucide-react";
+import { Home, Camera, User as UserIcon } from "lucide-react";
 import { cn } from "./lib/utils";
 
 function App() {
