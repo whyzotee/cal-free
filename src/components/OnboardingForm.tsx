@@ -145,7 +145,7 @@ export const OnboardingForm: React.FC<{
                 type="number"
                 {...register("age", { valueAsNumber: true })}
                 placeholder="25"
-                className="w-full h-16 bg-zinc-50 rounded-3xl px-6 font-black text-xl border-2 border-transparent focus:border-purple-200 focus:bg-white transition-all outline-none"
+                className="w-full h-16 bg-zinc-50 rounded-[32px] px-6 font-black text-xl border-2 border-transparent focus:border-purple-200 focus:bg-white transition-all outline-none"
               />
               {errors.age && (
                 <p className="text-red-500 text-[10px] font-bold ml-4">
@@ -159,7 +159,7 @@ export const OnboardingForm: React.FC<{
               </label>
               <select
                 {...register("gender")}
-                className="w-full h-16 bg-zinc-50 rounded-3xl px-6 font-black text-lg border-2 border-transparent focus:border-purple-200 focus:bg-white transition-all outline-none appearance-none"
+                className="w-full h-16 bg-zinc-50 rounded-[32px] px-6 font-black text-lg border-2 border-transparent focus:border-purple-200 focus:bg-white transition-all outline-none appearance-none"
               >
                 <option value="male">Male</option>
                 <option value="female">Female</option>
@@ -179,7 +179,7 @@ export const OnboardingForm: React.FC<{
                 step="0.1"
                 {...register("weight", { valueAsNumber: true })}
                 placeholder="70.5"
-                className="w-full h-16 bg-zinc-50 rounded-3xl px-6 font-black text-xl border-2 border-transparent focus:border-purple-200 focus:bg-white transition-all outline-none"
+                className="w-full h-16 bg-zinc-50 rounded-[32px] px-6 font-black text-xl border-2 border-transparent focus:border-purple-200 focus:bg-white transition-all outline-none"
               />
             </div>
             <div className="space-y-2">
@@ -190,7 +190,7 @@ export const OnboardingForm: React.FC<{
                 type="number"
                 {...register("height", { valueAsNumber: true })}
                 placeholder="175"
-                className="w-full h-16 bg-zinc-50 rounded-3xl px-6 font-black text-xl border-2 border-transparent focus:border-purple-200 focus:bg-white transition-all outline-none"
+                className="w-full h-16 bg-zinc-50 rounded-[32px] px-6 font-black text-xl border-2 border-transparent focus:border-purple-200 focus:bg-white transition-all outline-none"
               />
             </div>
           </div>
@@ -202,7 +202,7 @@ export const OnboardingForm: React.FC<{
             </label>
             <select
               {...register("activity_level")}
-              className="w-full h-20 bg-zinc-50 rounded-3xl px-6 font-black text-lg border-2 border-transparent focus:border-purple-200 focus:bg-white transition-all outline-none appearance-none"
+              className="w-full h-20 bg-zinc-50 rounded-[32px] px-6 font-black text-lg border-2 border-transparent focus:border-purple-200 focus:bg-white transition-all outline-none appearance-none"
             >
               <option value="sedentary">Sedentary (No exercise)</option>
               <option value="lightly_active">Lightly Active (1-3 days)</option>
@@ -219,7 +219,7 @@ export const OnboardingForm: React.FC<{
           type="submit"
           disabled={isSubmitting}
           size="lg"
-          className="w-full bg-zinc-900 hover:bg-black text-white rounded-4xl h-20 group"
+          className="w-full bg-zinc-900 hover:bg-black text-white rounded-[40px] h-20 group"
         >
           {isSubmitting ? (
             "Optimizing..."

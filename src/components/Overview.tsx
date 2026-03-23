@@ -147,7 +147,7 @@ export function Overview() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-zinc-900 p-6 rounded-[40px] text-white shadow-[0_20px_50px_rgba(0,0,0,0.15)] relative overflow-hidden group">
+        <div className="bg-zinc-900 p-6 rounded-4xl text-white shadow-[0_20px_50px_rgba(0,0,0,0.15)] relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-20 h-20 bg-purple-500/20 blur-2xl -mr-10 -mt-10" />
           <Target className="w-6 h-6 text-purple-400 mb-4" />
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
@@ -160,7 +160,7 @@ export function Overview() {
             KCAL TARGET
           </p>
         </div>
-        <div className="bg-zinc-50 p-6 rounded-[40px] border border-zinc-100 flex flex-col justify-end">
+        <div className="bg-zinc-50 p-6 rounded-4xl border border-zinc-100 flex flex-col justify-end">
           <TrendingUp className="w-6 h-6 text-emerald-500 mb-4" />
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">
             Avg Intake
@@ -219,7 +219,7 @@ export function Overview() {
                 cursor={{ fill: "#fafafa", radius: 16 }}
                 content={<ChartTooltipContent />}
               />
-              <Bar dataKey="calories" radius={[12, 12, 12, 12]} barSize={36}>
+              <Bar dataKey="calories" radius={[16, 16, 16, 16]} barSize={36}>
                 {chartData.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
@@ -254,7 +254,7 @@ export function Overview() {
       </div>
 
       {/* Macro Breakdown */}
-      <div className="bg-zinc-50/50 p-8 rounded-[48px] border border-zinc-100/50 space-y-6">
+      <div className="bg-zinc-50/50 p-8 rounded-4xl border border-zinc-100/50 space-y-6">
         <div className="flex items-center justify-between">
           <h3 className="font-black text-[11px] text-zinc-400 uppercase tracking-[0.3em]">
             Macro Balance

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
+import { Link } from "@tanstack/react-router";
 import {
   Utensils,
   ChevronRight,
@@ -19,6 +20,8 @@ interface Log {
   fat: number;
   carbs: number;
   created_at: string;
+  image_url?: string;
+  signed_url?: string;
 }
 
 const MacroRing = ({
@@ -71,7 +74,34 @@ export const Dashboard: React.FC<{ tdee: number }> = ({ tdee }) => {
         .eq("user_id", user.id)
         .gte("created_at", startOfDay.toISOString())
         .order("created_at", { ascending: false });
-      if (!error) setLogs(data || []);
+
+      if (!error && data) {
+        const rawLogs = data as Log[];
+        const logsWithImages = rawLogs.filter((log) => log.image_url);
+
+        if (logsWithImages.length > 0) {
+          const { data: signedData, error: signedError } =
+            await supabase.storage.from("food-images").createSignedUrls(
+              logsWithImages.map((log) => log.image_url!),
+              3600
+            );
+
+          if (!signedError && signedData) {
+            const urlMap = new Map(
+              logsWithImages.map((log, i) => [log.id, signedData[i].signedUrl])
+            );
+            const enrichedLogs = rawLogs.map((log) => ({
+              ...log,
+              signed_url: urlMap.get(log.id)
+            }));
+            setLogs(enrichedLogs);
+          } else {
+            setLogs(rawLogs);
+          }
+        } else {
+          setLogs(rawLogs);
+        }
+      }
       setLoading(false);
     };
 
@@ -133,7 +163,7 @@ export const Dashboard: React.FC<{ tdee: number }> = ({ tdee }) => {
 
       {/* Main Stats Card (Dropset Hero) */}
       <div className="relative group">
-        <div className="absolute -inset-4 bg-purple-500/5 rounded-[64px] blur-3xl group-hover:bg-purple-500/10 transition-all duration-700"></div>
+        <div className="absolute -inset-4 bg-purple-500/5 rounded-[48px] blur-3xl group-hover:bg-purple-500/10 transition-all duration-700"></div>
         <div className="bg-zinc-900 rounded-[48px] sm:rounded-[56px] p-6 sm:p-8 text-white relative shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] overflow-hidden">
           {/* Decorative Mesh Gradient */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/20 blur-[80px] -mr-32 -mt-32"></div>
@@ -241,8 +271,8 @@ export const Dashboard: React.FC<{ tdee: number }> = ({ tdee }) => {
 
       {/* Action Grid */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
-        <div className="bg-zinc-50 p-5 sm:p-6 rounded-4xl sm:rounded-4xl border border-zinc-100 flex flex-col gap-4 group hover:bg-white hover:shadow-xl hover:scale-[1.02] transition-all duration-500 cursor-pointer">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-xl sm:rounded-2xl flex items-center justify-center text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-colors duration-500">
+        <div className="bg-zinc-50 p-5 sm:p-6 rounded-4xl border border-zinc-100 flex flex-col gap-4 group hover:bg-white hover:shadow-xl hover:scale-[1.02] transition-all duration-500 cursor-pointer">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-2xl flex items-center justify-center text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-colors duration-500">
             <Zap className="w-5 h-5 sm:w-6 sm:h-6" fill="currentColor" />
           </div>
           <div>
@@ -254,8 +284,8 @@ export const Dashboard: React.FC<{ tdee: number }> = ({ tdee }) => {
             </p>
           </div>
         </div>
-        <div className="bg-zinc-50 p-5 sm:p-6 rounded-4xl sm:rounded-4xl border border-zinc-100 flex flex-col gap-4 group hover:bg-white hover:shadow-xl hover:scale-[1.02] transition-all duration-500 cursor-pointer">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 rounded-xl sm:rounded-2xl flex items-center justify-center text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-colors duration-500">
+        <div className="bg-zinc-50 p-5 sm:p-6 rounded-4xl border border-zinc-100 flex flex-col gap-4 group hover:bg-white hover:shadow-xl hover:scale-[1.02] transition-all duration-500 cursor-pointer">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 rounded-2xl flex items-center justify-center text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-colors duration-500">
             <Flame className="w-5 h-5 sm:w-6 sm:h-6" fill="currentColor" />
           </div>
           <div>
@@ -284,8 +314,8 @@ export const Dashboard: React.FC<{ tdee: number }> = ({ tdee }) => {
 
         <div className="space-y-3 sm:space-y-4">
           {logs.length === 0 ? (
-            <div className="py-16 sm:py-20 text-center flex flex-col items-center gap-4 bg-zinc-50 rounded-[40px] sm:rounded-[48px] border-2 border-dashed border-zinc-200">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-2xl sm:rounded-3xl flex items-center justify-center text-zinc-200 shadow-sm">
+            <div className="py-16 sm:py-20 text-center flex flex-col items-center gap-4 bg-zinc-50 rounded-[40px] border-2 border-dashed border-zinc-200">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-2xl flex items-center justify-center text-zinc-200 shadow-sm">
                 <Target className="w-6 h-6 sm:w-8 sm:h-8" />
               </div>
               <p className="text-zinc-300 font-black italic tracking-tight text-sm">
@@ -294,13 +324,23 @@ export const Dashboard: React.FC<{ tdee: number }> = ({ tdee }) => {
             </div>
           ) : (
             logs.map((log) => (
-              <div
+              <Link
                 key={log.id}
-                className="group relative bg-white p-4 sm:p-6 rounded-4xl sm:rounded-[40px] border border-zinc-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] flex items-center justify-between tap-effect hover:shadow-[0_20px_40px_rgb(0,0,0,0.06)] transition-all duration-500"
+                to="/logs/$logId"
+                params={{ logId: log.id.toString() }}
+                className="group relative bg-white p-4 sm:p-6 rounded-[40px] border border-zinc-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] flex items-center justify-between tap-effect hover:shadow-[0_20px_40px_rgb(0,0,0,0.06)] transition-all duration-500"
               >
                 <div className="flex items-center gap-4 sm:gap-5">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-zinc-900 rounded-2xl sm:rounded-3xl flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform duration-500">
-                    <Utensils className="w-6 h-6 sm:w-7 sm:h-7" />
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 bg-zinc-900 rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform duration-500 overflow-hidden">
+                    {log.signed_url ? (
+                      <img
+                        src={log.signed_url}
+                        alt={log.food_name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Utensils className="w-6 h-6 sm:w-7 sm:h-7" />
+                    )}
                   </div>
                   <div>
                     <h4 className="font-black text-zinc-900 text-lg sm:text-xl leading-none mb-2">
@@ -315,8 +355,13 @@ export const Dashboard: React.FC<{ tdee: number }> = ({ tdee }) => {
                       </p>
                       <span className="w-1 h-1 bg-zinc-200 rounded-full"></span>
                       <p className="text-[9px] font-black text-purple-500 tracking-widest uppercase truncate max-w-20">
-                        High Protein
+                        {log.protein && log.protein >= 15 
+                          ? "High Protein" 
+                          : log.calories <= 200 
+                          ? "Low Calorie" 
+                          : "Balanced"}
                       </p>
+
                     </div>
                   </div>
                 </div>
@@ -333,7 +378,7 @@ export const Dashboard: React.FC<{ tdee: number }> = ({ tdee }) => {
                     <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
                   </div>
                 </div>
-              </div>
+              </Link>
             ))
           )}
         </div>
@@ -342,8 +387,8 @@ export const Dashboard: React.FC<{ tdee: number }> = ({ tdee }) => {
       {/* Quick Log Visual Hint */}
       <div className="relative pt-4">
         <div className="absolute inset-0 bg-linear-to-t from-white via-transparent to-transparent z-10 h-20 -top-16"></div>
-        <button className="w-full bg-zinc-50 py-8 sm:py-10 rounded-[40px] sm:rounded-[48px] border-2 border-dashed border-zinc-200 flex flex-col items-center justify-center gap-3 group hover:border-purple-200 hover:bg-purple-50/50 transition-all duration-500">
-          <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white rounded-xl sm:rounded-2xl flex items-center justify-center text-zinc-300 group-hover:text-purple-600 shadow-sm border border-zinc-100 group-hover:scale-110 transition-all">
+        <button className="w-full bg-zinc-50 py-8 sm:py-10 rounded-[40px] border-2 border-dashed border-zinc-200 flex flex-col items-center justify-center gap-3 group hover:border-purple-200 hover:bg-purple-50/50 transition-all duration-500">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white rounded-2xl flex items-center justify-center text-zinc-300 group-hover:text-purple-600 shadow-sm border border-zinc-100 group-hover:scale-110 transition-all">
             <Plus className="w-7 h-7 sm:w-8 sm:h-8" />
           </div>
           <span className="text-zinc-400 font-black text-[10px] sm:text-xs uppercase tracking-[0.2em] group-hover:text-purple-600 transition-colors">

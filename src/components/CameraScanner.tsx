@@ -6,7 +6,8 @@ import {
   Sparkles,
   X,
   ChevronRight,
-  Zap
+  Zap,
+  Loader2
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
@@ -16,6 +17,8 @@ interface FoodAnalysis {
   protein: number;
   carbs: number;
   fat: number;
+  serving_size?: number;
+  unit?: string;
 }
 
 export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
@@ -24,6 +27,15 @@ export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
   const [analysis, setAnalysis] = useState<FoodAnalysis | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  // Editable fields
+  const [editableName, setEditableName] = useState("");
+  const [editableCalories, setEditableCalories] = useState(0);
+  const [editableProtein, setEditableProtein] = useState(0);
+  const [editableCarbs, setEditableCarbs] = useState(0);
+  const [editableFat, setEditableFat] = useState(0);
+  const [editableServing, setEditableServing] = useState(100);
+  const [editableUnit, setEditableUnit] = useState("g");
 
   const handleCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -50,17 +62,19 @@ export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
       });
 
       if (error) throw error;
-      
-      // Clean data before setting state
-      const cleanedData: FoodAnalysis = {
-        food_name: data.food_name || "Unknown Food",
-        calories: parseNumeric(data.calories),
-        protein: parseNumeric(data.protein),
-        carbs: parseNumeric(data.carbs),
-        fat: parseNumeric(data.fat),
-      };
-      
-      setAnalysis(cleanedData);
+
+      const res = data as FoodAnalysis;
+
+      // Initialize editable fields
+      setEditableName(res.food_name || "Unknown Food");
+      setEditableCalories(parseNumeric(res.calories));
+      setEditableProtein(parseNumeric(res.protein));
+      setEditableCarbs(parseNumeric(res.carbs));
+      setEditableFat(parseNumeric(res.fat));
+      setEditableServing(parseNumeric(res.serving_size) || 100);
+      setEditableUnit(res.unit || "g");
+
+      setAnalysis(res);
     } catch (err: unknown) {
       console.error("Analysis Error:", err);
       const message =
@@ -76,38 +90,67 @@ export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
 
   const parseNumeric = (val: string | number | null | undefined): number => {
     if (val === null || val === undefined) return 0;
-    const str = String(val).replace(/[^0-9.]/g, '');
+    const str = String(val).replace(/[^0-9.]/g, "");
     const num = parseFloat(str);
     return isNaN(num) ? 0 : num;
   };
 
   const saveLog = async () => {
-    if (!analysis) return;
-    const {
-      data: { user }
-    } = await supabase.auth.getUser();
-    if (!user) return;
+    setLoading(true);
+    try {
+      const {
+        data: { user }
+      } = await supabase.auth.getUser();
+      if (!user) return;
 
-    // Ensure all numeric values are clean
-    const logData = {
-      user_id: user.id,
-      food_name: analysis.food_name,
-      calories: analysis.calories,
-      protein: analysis.protein,
-      carbs: analysis.carbs,
-      fat: analysis.fat,
-      image_url: null
-    };
+      let imagePath = null;
 
-    console.log("Saving log data:", logData);
+      // Upload image to Storage bucket 'food-images'
+      if (image) {
+        // Convert base64 to Blob
+        const base64Data = image.split(',')[1];
+        const byteCharacters = atob(base64Data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'image/jpeg' });
 
-    const { error } = await supabase.from("calorie_logs").insert(logData);
+        const fileName = `${Date.now()}.jpg`;
+        const filePath = `${user.id}/${fileName}`;
 
-    if (error) {
-      console.error("Save Log Error:", error);
-      alert("Failed to save log: " + error.message);
-    } else {
+        const { error: uploadError } = await supabase.storage
+          .from('food-images')
+          .upload(filePath, blob, {
+            contentType: 'image/jpeg',
+            upsert: false
+          });
+
+        if (uploadError) throw uploadError;
+        imagePath = filePath;
+      }
+
+      const logData = {
+        user_id: user.id,
+        food_name: editableName,
+        calories: editableCalories,
+        protein: editableProtein,
+        carbs: editableCarbs,
+        fat: editableFat,
+        image_url: imagePath
+      };
+
+      const { error } = await supabase.from("calorie_logs").insert(logData);
+
+      if (error) throw error;
       onSave();
+    } catch (err: unknown) {
+      console.error("Save Log Error:", err);
+      const message = err instanceof Error ? err.message : "Failed to save log";
+      alert(message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -131,7 +174,7 @@ export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
         <div className="grid grid-cols-1 gap-4 flex-1">
           <button
             onClick={() => cameraInputRef.current?.click()}
-            className="group relative overflow-hidden bg-zinc-900 rounded-[48px] p-10 flex flex-col items-center justify-center text-white tap-effect shadow-2xl h-64"
+            className="group relative overflow-hidden bg-zinc-900 rounded-4xl p-10 flex flex-col items-center justify-center text-white tap-effect shadow-2xl h-64"
           >
             <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/20 blur-[60px] -mr-16 -mt-16"></div>
             <Camera className="w-16 h-16 mb-6 group-hover:scale-110 transition-transform duration-500" />
@@ -153,7 +196,7 @@ export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
 
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="group bg-zinc-50 border-2 border-dashed border-zinc-200 rounded-[48px] p-10 flex flex-col items-center justify-center text-zinc-400 tap-effect hover:bg-white hover:border-purple-200 transition-all h-48"
+            className="group bg-zinc-50 border-2 border-dashed border-zinc-200 rounded-4xl p-10 flex flex-col items-center justify-center text-zinc-400 tap-effect hover:bg-white hover:border-purple-200 transition-all h-48"
           >
             <Upload className="w-10 h-10 mb-4 group-hover:-translate-y-2 transition-transform duration-500" />
             <span className="text-lg font-black tracking-tight text-zinc-600">
@@ -173,7 +216,7 @@ export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
       {/* State 2 & 3: Preview & Analysis */}
       {image && (
         <div className="flex-1 flex flex-col space-y-6">
-          <div className="relative h-[30vh] md:h-64 rounded-[56px] overflow-hidden shadow-2xl border-4 border-white group">
+          <div className="relative h-[30vh] md:h-64 rounded-[48px] overflow-hidden shadow-2xl border-4 border-white group">
             <img
               src={image}
               alt="Food"
@@ -210,67 +253,111 @@ export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
           </div>
 
           {analysis && !loading && (
-            <div className="bg-white rounded-[56px] p-8 border border-zinc-50 shadow-[0_20px_50px_rgba(0,0,0,0.05)] space-y-8 animate-in slide-in-from-bottom-8 duration-700">
-              <div className="flex items-start justify-between">
-                <div className="space-y-2">
+            <div className="bg-white rounded-[48px] p-8 border border-zinc-50 shadow-[0_20px_50px_rgba(0,0,0,0.05)] space-y-8 animate-in slide-in-from-bottom-8 duration-700">
+              <div className="flex flex-col sm:flex-row items-start justify-between gap-6">
+                <div className="space-y-3 w-full sm:flex-1">
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-purple-500" />
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-purple-500">
                       AI Analysis Complete
                     </span>
                   </div>
-                  <h3 className="text-4xl font-black tracking-tighter text-zinc-900 leading-none italic">
-                    {analysis.food_name}
+                  <h3 className="text-4xl sm:text-5xl font-black tracking-tighter text-zinc-900 leading-[0.9] italic px-1">
+                    {editableName}
                   </h3>
+                  <div className="flex items-center gap-2 px-1">
+                    <div className="w-1.5 h-1.5 bg-zinc-200 rounded-full"></div>
+                    <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
+                      Standard Serving ({editableServing}{editableUnit})
+                    </p>
+                  </div>
                 </div>
-                <div className="bg-zinc-900 p-6 rounded-4xl text-center min-w-25 shadow-xl">
-                  <p className="text-3xl font-black text-white leading-none tracking-tighter">
-                    {analysis.calories}
-                  </p>
-                  <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mt-1">
-                    KCAL
-                  </p>
+
+                <div className="bg-zinc-900 p-8 rounded-3xl text-center w-full sm:w-auto sm:min-w-40 shadow-xl relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-20 h-20 bg-purple-500/20 blur-2xl -mr-10 -mt-10" />
+                  <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-2">Total Energy</p>
+                  <div className="flex items-center justify-center gap-1">
+                    <input
+                      type="number"
+                      value={editableCalories}
+                      onChange={(e) => setEditableCalories(Number(e.target.value))}
+                      className="text-5xl font-black text-white leading-none tracking-tighter bg-transparent w-full max-w-24 text-center outline-none"
+                    />
+                    <span className="text-xl font-black text-purple-500 italic mt-2">Kcal</span>
+                  </div>
                 </div>
               </div>
+
 
               <div className="grid grid-cols-3 gap-3">
                 <div className="bg-zinc-50 p-5 rounded-3xl border border-zinc-100/50">
                   <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">
                     Protein
                   </p>
-                  <p className="text-xl font-black text-zinc-900">
-                    {analysis.protein || 0}g
-                  </p>
+                  <div className="flex items-baseline gap-0.5">
+                    <input
+                      type="number"
+                      value={editableProtein}
+                      onChange={(e) =>
+                        setEditableProtein(Number(e.target.value))
+                      }
+                      className="text-xl font-black text-zinc-900 bg-transparent w-full outline-none"
+                    />
+                    <span className="text-[10px] font-bold text-zinc-400">
+                      g
+                    </span>
+                  </div>
                   <div className="h-1 bg-pink-500 rounded-full mt-3 w-3/4 opacity-40"></div>
                 </div>
                 <div className="bg-zinc-50 p-5 rounded-3xl border border-zinc-100/50">
                   <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">
                     Carbs
                   </p>
-                  <p className="text-xl font-black text-zinc-900">
-                    {analysis.carbs || 0}g
-                  </p>
+                  <div className="flex items-baseline gap-0.5">
+                    <input
+                      type="number"
+                      value={editableCarbs}
+                      onChange={(e) => setEditableCarbs(Number(e.target.value))}
+                      className="text-xl font-black text-zinc-900 bg-transparent w-full outline-none"
+                    />
+                    <span className="text-[10px] font-bold text-zinc-400">
+                      g
+                    </span>
+                  </div>
                   <div className="h-1 bg-blue-500 rounded-full mt-3 w-3/4 opacity-40"></div>
                 </div>
                 <div className="bg-zinc-50 p-5 rounded-3xl border border-zinc-100/50">
                   <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">
                     Fat
                   </p>
-                  <p className="text-xl font-black text-zinc-900">
-                    {analysis.fat || 0}g
-                  </p>
+                  <div className="flex items-baseline gap-0.5">
+                    <input
+                      type="number"
+                      value={editableFat}
+                      onChange={(e) => setEditableFat(Number(e.target.value))}
+                      className="text-xl font-black text-zinc-900 bg-transparent w-full outline-none"
+                    />
+                    <span className="text-[10px] font-bold text-zinc-400">
+                      g
+                    </span>
+                  </div>
                   <div className="h-1 bg-zinc-900 rounded-full mt-3 w-3/4 opacity-40"></div>
                 </div>
               </div>
 
               <button
                 onClick={saveLog}
-                className="w-full bg-zinc-900 text-white h-20 rounded-4xl font-black text-lg shadow-2xl flex items-center justify-center gap-3 tap-effect hover:bg-black transition-all group"
+                disabled={loading}
+                className="w-full bg-zinc-900 text-white h-20 rounded-[40px] font-black text-lg shadow-2xl flex items-center justify-center gap-3 tap-effect hover:bg-black transition-all group disabled:opacity-50"
               >
                 <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Check className="w-6 h-6" />
+                  {loading ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    <Check className="w-6 h-6" />
+                  )}
                 </div>
-                Log This Meal
+                {loading ? "Logging..." : "Log This Meal"}
                 <ChevronRight className="w-6 h-6 text-zinc-500" />
               </button>
             </div>

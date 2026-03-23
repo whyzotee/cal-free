@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
+import { Link } from "@tanstack/react-router";
 import { History, Calendar, Utensils } from "lucide-react";
 
 interface CalorieLog {
@@ -7,6 +8,8 @@ interface CalorieLog {
   food_name: string;
   calories: number;
   created_at: string;
+  image_url?: string;
+  signed_url?: string;
 }
 
 export function Logs() {
@@ -15,12 +18,39 @@ export function Logs() {
 
   useEffect(() => {
     async function fetchLogs() {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("calorie_logs")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (data) setLogs(data);
+      if (!error && data) {
+        const rawLogs = data as CalorieLog[];
+        const logsWithImages = rawLogs.filter((log) => log.image_url);
+
+        if (logsWithImages.length > 0) {
+          const { data: signedData, error: signedError } = await supabase.storage
+            .from("food-images")
+            .createSignedUrls(
+              logsWithImages.map((log) => log.image_url!),
+              3600
+            );
+
+          if (!signedError && signedData) {
+            const urlMap = new Map(
+              logsWithImages.map((log, i) => [log.id, signedData[i].signedUrl])
+            );
+            const enrichedLogs = rawLogs.map((log) => ({
+              ...log,
+              signed_url: urlMap.get(log.id)
+            }));
+            setLogs(enrichedLogs);
+          } else {
+            setLogs(rawLogs);
+          }
+        } else {
+          setLogs(rawLogs);
+        }
+      }
       setLoading(false);
     }
     fetchLogs();
@@ -45,7 +75,7 @@ export function Logs() {
           </p>
         </div>
       ) : logs.length === 0 ? (
-        <div className="bg-zinc-50 rounded-[48px] p-12 text-center space-y-4">
+        <div className="bg-zinc-50 rounded-4xl p-12 text-center space-y-4">
           <History className="w-12 h-12 text-zinc-200 mx-auto" />
           <p className="font-black text-zinc-900">No logs found</p>
           <p className="text-xs text-zinc-400 font-bold uppercase tracking-widest leading-loose px-4">
@@ -55,12 +85,22 @@ export function Logs() {
       ) : (
         <div className="space-y-4">
           {logs.map((log) => (
-            <div
+            <Link
               key={log.id}
-              className="bg-zinc-50 p-6 rounded-[32px] border border-zinc-100 flex items-center gap-5 group hover:bg-white hover:border-zinc-200 transition-all shadow-sm active:scale-[0.98]"
+              to="/logs/$logId"
+              params={{ logId: log.id.toString() }}
+              className="bg-zinc-50 p-6 rounded-[40px] border border-zinc-100 flex items-center gap-5 group hover:bg-white hover:border-zinc-200 transition-all shadow-sm active:scale-[0.98]"
             >
-              <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-zinc-400 group-hover:bg-purple-50 group-hover:text-purple-500 transition-colors shadow-sm">
-                <Utensils className="w-6 h-6" />
+              <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-zinc-400 group-hover:bg-purple-50 group-hover:text-purple-500 transition-all shadow-sm shrink-0 overflow-hidden">
+                {log.signed_url ? (
+                  <img
+                    src={log.signed_url}
+                    alt={log.food_name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <Utensils className="w-6 h-6" />
+                )}
               </div>
               <div className="flex-1">
                 <h4 className="font-black text-zinc-900 text-lg leading-tight truncate max-w-35">
@@ -81,7 +121,7 @@ export function Logs() {
                   KCAL
                 </p>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}

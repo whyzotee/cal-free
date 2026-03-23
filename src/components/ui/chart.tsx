@@ -39,7 +39,7 @@ export function ChartTooltipContent({ active, payload, label, hideLabel }: any) 
   if (!active || !payload?.length) return null
 
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-3 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+    <div className="rounded-2xl border border-zinc-200 bg-white p-3 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
       {!hideLabel && <div className="mb-2 font-black uppercase tracking-widest text-[10px] text-zinc-400">{label}</div>}
       <div className="space-y-1.5">
         {payload.map((item: any, index: number) => (

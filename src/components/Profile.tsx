@@ -58,7 +58,7 @@ function ProfileForm({ session, profile }: { session: Session, profile: ProfileT
       <div className="bg-white p-8 rounded-[48px] border border-zinc-50 shadow-[0_20px_60px_rgba(0,0,0,0.03)] flex flex-col items-center gap-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-purple-50 blur-[60px] -mr-16 -mt-16" />
         
-        <div className="w-28 h-28 bg-zinc-900 rounded-[40px] flex items-center justify-center text-white shadow-2xl relative z-10 border-[6px] border-white">
+        <div className="w-28 h-28 bg-zinc-900 rounded-3xl flex items-center justify-center text-white shadow-2xl relative z-10 border-[6px] border-white">
           <UserIcon className="w-12 h-12" />
         </div>
         
@@ -66,18 +66,18 @@ function ProfileForm({ session, profile }: { session: Session, profile: ProfileT
           <h3 className="font-black text-3xl text-zinc-900 tracking-tighter italic">
             {session.user.email?.split("@")[0]}
           </h3>
-          <p className="text-zinc-400 font-black text-[10px] uppercase tracking-[0.2em]">
+          <p className="text-zinc-400 font-black text-[10px] uppercase tracking-2em">
             {session.user.email}
           </p>
         </div>
 
         <div className="grid grid-cols-2 gap-4 w-full mt-4">
-           <div className="bg-zinc-50 p-6 rounded-[32px] border border-zinc-100/50 flex flex-col justify-end">
+           <div className="bg-zinc-50 p-6 rounded-4xl border border-zinc-100/50 flex flex-col justify-end">
               <Scale className="w-5 h-5 text-purple-500 mb-3" />
               <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Height</p>
               <p className="text-2xl font-black text-zinc-900 tracking-tighter italic">{profile.height}<span className="text-xs ml-1 not-italic">CM</span></p>
            </div>
-           <div className="bg-zinc-50 p-6 rounded-[32px] border border-zinc-100/50 flex flex-col justify-end">
+           <div className="bg-zinc-50 p-6 rounded-4xl border border-zinc-100/50 flex flex-col justify-end">
               <Weight className="w-5 h-5 text-emerald-500 mb-3" />
               <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Age</p>
               <p className="text-2xl font-black text-zinc-900 tracking-tighter italic">{profile.age}<span className="text-xs ml-1 not-italic">YRS</span></p>
@@ -86,7 +86,7 @@ function ProfileForm({ session, profile }: { session: Session, profile: ProfileT
       </div>
 
       {/* Weight Update Card */}
-      <div className="bg-zinc-900 p-8 rounded-[48px] text-white shadow-2xl space-y-6 relative overflow-hidden group">
+      <div className="bg-zinc-900 p-8 rounded-4xl text-white shadow-2xl space-y-6 relative overflow-hidden group">
         <div className="absolute top-0 right-0 w-40 h-40 bg-purple-500/10 blur-[50px] -mr-20 -mt-20 group-hover:bg-purple-500/20 transition-all duration-700" />
         
         <div className="flex items-center justify-between">
@@ -137,7 +137,7 @@ function ProfileForm({ session, profile }: { session: Session, profile: ProfileT
 
       <button
         onClick={() => supabase.auth.signOut()}
-        className="w-full flex items-center justify-center gap-3 bg-white text-zinc-400 px-8 py-6 rounded-[32px] font-black text-[10px] uppercase tracking-[0.3em] border border-zinc-100 shadow-sm active:scale-95 transition-all hover:text-red-500 hover:border-red-100 group"
+        className="w-full flex items-center justify-center gap-3 bg-white text-zinc-400 px-8 py-6 rounded-3xl font-black text-[10px] uppercase tracking-[0.3em] border border-zinc-100 shadow-sm active:scale-95 transition-all hover:text-red-500 hover:border-red-100 group"
       >
         <LogOut className="w-4 h-4 transition-transform group-hover:translate-x-1" />
         Sign Out

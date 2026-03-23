@@ -38,7 +38,7 @@ export function RootComponent() {
                   key={item.to}
                   to={item.to}
                   className={cn(
-                    "w-16 h-16 rounded-[28px] flex items-center justify-center shadow-2xl transition-all tap-effect active:scale-90 -mt-12 border-[6px] border-white",
+                    "w-16 h-16 rounded-3xl flex items-center justify-center shadow-2xl transition-all tap-effect active:scale-90 -mt-12 border-[6px] border-white",
                     isActive
                       ? "bg-purple-600 text-white shadow-purple-300"
                       : "bg-zinc-900 text-white shadow-zinc-400"

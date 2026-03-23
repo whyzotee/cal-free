@@ -14,6 +14,7 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as OverviewRouteImport } from './routes/overview'
 import { Route as LogsRouteImport } from './routes/logs'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LogsLogIdRouteImport } from './routes/logs_.$logId'
 
 const ScanRoute = ScanRouteImport.update({
   id: '/scan',
@@ -40,6 +41,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LogsLogIdRoute = LogsLogIdRouteImport.update({
+  id: '/logs_/$logId',
+  path: '/logs/$logId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/overview': typeof OverviewRoute
   '/profile': typeof ProfileRoute
   '/scan': typeof ScanRoute
+  '/logs/$logId': typeof LogsLogIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/overview': typeof OverviewRoute
   '/profile': typeof ProfileRoute
   '/scan': typeof ScanRoute
+  '/logs/$logId': typeof LogsLogIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,13 +70,21 @@ export interface FileRoutesById {
   '/overview': typeof OverviewRoute
   '/profile': typeof ProfileRoute
   '/scan': typeof ScanRoute
+  '/logs_/$logId': typeof LogsLogIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/logs' | '/overview' | '/profile' | '/scan'
+  fullPaths: '/' | '/logs' | '/overview' | '/profile' | '/scan' | '/logs/$logId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/logs' | '/overview' | '/profile' | '/scan'
-  id: '__root__' | '/' | '/logs' | '/overview' | '/profile' | '/scan'
+  to: '/' | '/logs' | '/overview' | '/profile' | '/scan' | '/logs/$logId'
+  id:
+    | '__root__'
+    | '/'
+    | '/logs'
+    | '/overview'
+    | '/profile'
+    | '/scan'
+    | '/logs_/$logId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -77,6 +93,7 @@ export interface RootRouteChildren {
   OverviewRoute: typeof OverviewRoute
   ProfileRoute: typeof ProfileRoute
   ScanRoute: typeof ScanRoute
+  LogsLogIdRoute: typeof LogsLogIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -116,6 +133,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/logs_/$logId': {
+      id: '/logs_/$logId'
+      path: '/logs/$logId'
+      fullPath: '/logs/$logId'
+      preLoaderRoute: typeof LogsLogIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -125,6 +149,7 @@ const rootRouteChildren: RootRouteChildren = {
   OverviewRoute: OverviewRoute,
   ProfileRoute: ProfileRoute,
   ScanRoute: ScanRoute,
+  LogsLogIdRoute: LogsLogIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

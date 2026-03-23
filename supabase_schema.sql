@@ -37,3 +37,35 @@ CREATE POLICY "Users can insert their own profiles" ON profiles FOR INSERT WITH 
 CREATE POLICY "Users can view their own calorie logs" ON calorie_logs FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can insert their own calorie logs" ON calorie_logs FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can delete their own calorie logs" ON calorie_logs FOR DELETE USING (auth.uid() = user_id);
+
+-- Storage Bucket Setup
+-- 1. Create Bucket
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('food-images', 'food-images', false);
+
+-- 2. Storage RLS Policies (Ensure users only access their own folder)
+-- Folder structure: food-images/{user_id}/{filename}
+
+CREATE POLICY "Allow users to upload food images"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (
+  bucket_id = 'food-images' AND 
+  (storage.foldername(name))[1] = auth.uid()::text
+);
+
+CREATE POLICY "Allow users to view their own food images"
+ON storage.objects FOR SELECT
+TO authenticated
+USING (
+  bucket_id = 'food-images' AND 
+  (storage.foldername(name))[1] = auth.uid()::text
+);
+
+CREATE POLICY "Allow users to delete their own food images"
+ON storage.objects FOR DELETE
+TO authenticated
+USING (
+  bucket_id = 'food-images' AND 
+  (storage.foldername(name))[1] = auth.uid()::text
+);
