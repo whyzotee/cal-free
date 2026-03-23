@@ -29,7 +29,7 @@ Deno.serve(async (req: Request) => {
     const mimeType = mimeMatch[1];
     const base64Data = mimeMatch[2];
 
-    const prompt = "Analyze the food in this image. Return ONLY a JSON object with: food_name, calories, protein, carbs, fat, serving_size (number), unit (e.g., 'g', 'piece', 'cup'). No formatting, no markdown.";
+    const prompt = "Analyze the food in this image. Return ONLY a JSON object with: food_name, calories, protein, carbs, fat, sugar (g), sodium (mg), cholesterol (mg), serving_size (number), unit (e.g., 'g', 'piece', 'cup'). No formatting, no markdown.";
 
     // ใช้ Gemini 3.1 Flash-Lite เพื่อความเร็วสูงสุดและประหยัดที่สุด
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent?key=${apiKey}`;

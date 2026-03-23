@@ -39,7 +39,11 @@ A premium-feel, high-performance Calorie Tracker PWA built with zero-cost infras
   - **Critical UX Rule:** All screens must be fully functional and visually balanced at **375px width** (iPhone SE/13 mini).
   - **Strategy:** Use `grid-cols-1 sm:grid-cols-N` to stack elements vertically on small screens.
   - **Scaling:** Avoid horizontal "squeezing" by converting horizontal row layouts (like macro grids) to vertical or flex-wrap stacks on mobile.
+  - **Premium Scanner UI:** Redesigned the `CameraScanner` result view to include a high-impact "Nutrition Hero" card, italicized typography, and a dynamic "Macro Ratio Bar" for a visual breakdown of energy sources.
+  - **Responsive Layout:** Implemented responsive padding (`p-6` vs `p-10`) and font sizes across the scanner to ensure readability and clickability on narrow displays.
+  - **Visual Clarity:** Added relevant emojis (🍗, 🍚, 🥑, 🍭, 🧂, 🍳) to nutritional details for an intuitive, modern feel.
 - **Charts:** Integrated a simplified, robust version of **shadcn/ui Charts** (Recharts) for weekly trends.
+- **Detailed Nutrition:** Expanded the database schema, AI prompt, and UI to include **Sugar (g)**, **Sodium (mg)**, and **Cholesterol (mg)** for comprehensive health tracking.
 - **Mobile Refinements:** 
   - Added `shrink-0` to dashboard icons to prevent layout compression on long text.
   - Implemented vertical stacking in `CameraScanner` results for better input spacing on small screens.
@@ -51,6 +55,7 @@ A premium-feel, high-performance Calorie Tracker PWA built with zero-cost infras
 - **Zustand:** Centralized store for `session`, `profile`, `loading`, and `theme` states.
 - **TanStack Router:** File-Based Routing in `src/routes/`.
 - **Detail View:** Implemented a dynamic route `/logs/$logId` to view detailed meal information, complete with secure image signed-URLs and deletion capability.
+- **Scroll Management:** Fixed a major navigation issue where new pages did not start at the top. Implemented a `useLocation` + `useRef` scroll-to-top handler in `__root.tsx`.
 - **Sticky/Fixed Navigation:** Use `fixed top-0` for detail headers to ensure stability within overflow-y containers.
 - **Secure Image Rendering:** Use `supabase.storage.from('bucket').createSignedUrls()` for batch fetching private image URLs in lists (Dashboard/Logs) to ensure RLS compliance while maintaining performance.
 - **Dynamic Tagging:** Food logs are dynamically tagged (e.g., "High Protein" for ≥15g, "Low Calorie" for ≤200kcal) instead of using hardcoded labels.
@@ -63,6 +68,7 @@ A premium-feel, high-performance Calorie Tracker PWA built with zero-cost infras
 - **UI Logic:** Hardened the AI result display to handle `0` or `null` values correctly, preventing display glitches like "0gg".
 - **Authentication:** Added a "Forgot Password" flow with Supabase `resetPasswordForEmail` integration.
 - **Profile Persistence:** Integrated weight updates and TDEE syncing directly into the `Profile` component.
+- **Structural Integrity:** Fixed a hydration error in the scanner where a `<div>` was nested inside a `<p>` tag in the calorie hero section.
 
 ---
 
@@ -91,5 +97,6 @@ A premium-feel, high-performance Calorie Tracker PWA built with zero-cost infras
 - [x] Secure Food Image Storage (Complete)
 - [x] Log Detail View (Complete)
 - [x] System-wide Dark Mode (Complete)
+- [x] Premium Scanner UI & Responsive Fixes (Complete)
 - [ ] User Settings / Profile Editing (Planned)
 - [ ] Custom Macro Goal Settings (Planned)

@@ -20,6 +20,9 @@ CREATE TABLE calorie_logs (
   protein DECIMAL(5, 2),
   fat DECIMAL(5, 2),
   carbs DECIMAL(5, 2),
+  sugar DECIMAL(5, 2),
+  sodium DECIMAL(7, 2),
+  cholesterol DECIMAL(7, 2),
   image_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
