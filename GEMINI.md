@@ -1,102 +1,43 @@
-# Project Context: Zero-Cost AI Calorie Tracker (PWA)
+# Project: Calorie Tracker PWA (Premium "Dropset" Style)
 
-## Core Vision
+## 🎯 Overall Goal
+Build a high-performance, premium-feel (iOS/Dropset style) Calorie Tracker PWA using Bun, React, Tailwind v4, Supabase, and Gemini 3.1 Flash-Lite with comprehensive nutritional analysis and system-wide dark mode.
 
-A premium-feel, high-performance Calorie Tracker PWA built with zero-cost infrastructure.
+## 🛠 Active Constraints
+- **Runtime**: Bun. Imports use `@/` for `src/`.
+- **Mobile Mandate**: All screens must be fully functional at 375px width (iPhone SE).
+- **Layout**: Vertical stacking (`grid-cols-1`) on mobile; aggressive rounding (`rounded-[48px]`, `rounded-4xl`).
+- **Typography**: Consistent "Dropset" headers for "Overview", "History", and "Profile" using `text-4xl font-black tracking-tight italic`.
+- **Spacing**: Standardized responsive padding at `px-6 sm:px-10` for main content containers and `p-8 sm:p-10` for cards.
+- **Scroll Behavior**: Reset `main` container scroll to (0,0) on route changes via `useLocation` in `__root.tsx`.
+- **Loading Pattern**: Standardized "Thinking..." centered animation across all pages using `Loader2` and `Sparkles` or `History`.
 
-## Tech Stack
+## 🧠 Key Knowledge
+- **Nutrition**: Supports calories, protein, carbs, fat, sugar (g), sodium (mg), and cholesterol (mg).
+- **Visuals**: Uses specific emojis (🍗, 🍚, 🧈, 🍭, 🧂, 🍳) for high-impact identification.
+- **Icon Sizing**: Macro icons are `text-xl` (🍗, 🍚, 🧈) and micro icons are `text-sm` (🧂, 🍭).
+- **Architecture**: Shared `NutritionDisplay.tsx` component unifies the nutrition UI, macro ratio bar, and AI refinement box across the Scanner and History Detail.
+- **UI Design**: "Dropset" aesthetic features high-impact "Nutrition Hero" cards, italicized numerical totals, and a multi-color Macro Ratio Bar (Pink: Protein, Blue: Carbs, Zinc: Fat).
+- **Data Integrity**: History details (`logs_.$logId.tsx`) are strictly read-only to ensure a permanent record of past logs. Editing is only permitted during the initial scan/log phase.
+- **Edge Security**: AI Analysis is protected by JWT verification using `auth.getClaims(token)` for maximum performance.
 
-- **Runtime:** Bun
-- **Frontend:** React (Vite) + Tailwind CSS v4
-- **State Management:** Zustand (Simplified global state)
-- **Routing:** TanStack Router (File-Based Routing)
-- **Database & Auth:** Supabase (PostgreSQL with RLS)
-- **AI Engine:** Google Gemini 3.1 Flash-Lite (via Supabase Edge Functions)
-- **Deployment:** Vercel (Frontend) + Supabase (Backend/AI)
+## 🛠 Artifact Trail
+- `src/components/NutritionDisplay.tsx`: Unified component for nutrition stats and macro ratio bars. Features increased emoji sizes and stacked layouts for "Dropset" impact.
+- `src/components/CameraScanner.tsx`: Fully integrated `editableServing` and `editableUnit` for precise portion control before logging. Includes client-side auth checks.
+- `src/routes/logs_.$logId.tsx`: Read-only history detail view. Removed all status indicators ("Healthy Choice", etc.) for a cleaner focus on food data.
+- `supabase/functions/analyze-food/index.ts`: Updated to latest Supabase pattern (`npm:@supabase/supabase-js@2`) with lightweight JWT verification.
 
----
-
-## Architectural Decisions
-
-### 1. AI Integration & Storage
-
-- **Status:** Migrated from Vercel API to **Supabase Edge Functions**.
-- **Model:** Upgraded to **Gemini 3.1 Flash-Lite** for the best balance of speed, cost-efficiency, and structured data extraction.
-- **Storage:** Implemented a private `food-images` bucket on Supabase with RLS policies to restrict user access to their own folders (`/{user_id}/{filename}`).
-- **Data Parsing:** Added `parseFloat` and numeric validation to the frontend `CameraScanner.tsx` to handle potential string types from AI responses.
-
-### 2. UI/UX Strategy (Dropset Style)
-
-- **Theme:** High-end Fitness App (Inspired by Dropset/iOS Native).
-- **Dark Mode Support:** 
-  - Systematic implementation of `dark:` utility classes across all components.
-  - Theme persistence in `localStorage` with options for **Light**, **Dark**, and **System Default**.
-  - Custom `ios-blur` utility in `index.css` dynamically adjusts for light/dark translucency.
-- **Navigation:** 
-  - 5-item iOS Style Bottom Navigation Bar (Diary, Stats, Scan FAB, Logs, Profile).
-  - Premium `ios-blur` glassmorphism background and `tap-effect` for tactile feedback.
-- **Mobile Mandate (375px Support):** 
-  - **Critical UX Rule:** All screens must be fully functional and visually balanced at **375px width** (iPhone SE/13 mini).
-  - **Strategy:** Use `grid-cols-1 sm:grid-cols-N` to stack elements vertically on small screens.
-  - **Scaling:** Avoid horizontal "squeezing" by converting horizontal row layouts (like macro grids) to vertical or flex-wrap stacks on mobile.
-  - **Premium Scanner UI:** Redesigned the `CameraScanner` result view to include a high-impact "Nutrition Hero" card, italicized typography, and a dynamic "Macro Ratio Bar" for a visual breakdown of energy sources.
-  - **Responsive Layout:** Implemented responsive padding (`p-6` vs `p-10`) and font sizes across the scanner to ensure readability and clickability on narrow displays.
-  - **Visual Clarity:** Added relevant emojis (🍗, 🍚, 🥑, 🍭, 🧂, 🍳) to nutritional details for an intuitive, modern feel.
-- **Charts:** Integrated a simplified, robust version of **shadcn/ui Charts** (Recharts) for weekly trends.
-- **Detailed Nutrition:** Expanded the database schema, AI prompt, and UI to include **Sugar (g)**, **Sodium (mg)**, and **Cholesterol (mg)** for comprehensive health tracking.
-- **Mobile Refinements:** 
-  - Added `shrink-0` to dashboard icons to prevent layout compression on long text.
-  - Implemented vertical stacking in `CameraScanner` results for better input spacing on small screens.
-  - Simplified the scan summary by keeping food names static while allowing calorie/macro edits.
-  - Reverted border radius back to original premium state (`rounded-[48px]`, `rounded-4xl`, etc.).
-
-### 3. State & Routing (Clean Architecture)
-
-- **Zustand:** Centralized store for `session`, `profile`, `loading`, and `theme` states.
-- **TanStack Router:** File-Based Routing in `src/routes/`.
-- **Detail View:** Implemented a dynamic route `/logs/$logId` to view detailed meal information, complete with secure image signed-URLs and deletion capability.
-- **Scroll Management:** Fixed a major navigation issue where new pages did not start at the top. Implemented a `useLocation` + `useRef` scroll-to-top handler in `__root.tsx`.
-- **Sticky/Fixed Navigation:** Use `fixed top-0` for detail headers to ensure stability within overflow-y containers.
-- **Secure Image Rendering:** Use `supabase.storage.from('bucket').createSignedUrls()` for batch fetching private image URLs in lists (Dashboard/Logs) to ensure RLS compliance while maintaining performance.
-- **Dynamic Tagging:** Food logs are dynamically tagged (e.g., "High Protein" for ≥15g, "Low Calorie" for ≤200kcal) instead of using hardcoded labels.
+## 📅 Task State
+1. [DONE] Dark Mode & Scroll Fixes.
+2. [DONE] Premium Scanner UI Refresh ("Dropset" style).
+3. [DONE] Shared Nutrition UI Component (`NutritionDisplay`).
+4. [DONE] Unified Premium Loading States across all views.
+5. [DONE] Group History by Date with Day Totals.
+6. [DONE] AI Refinement (Recalculate with AI).
+7. [DONE] Image Skeletons & Portion Size Editing.
+8. [DONE] Fast JWT Verification for Edge Functions.
+9. [IN PROGRESS] Profile Editing UI (Weight, Height, Age updates).
+10. [TODO] Custom Macro Goal Settings (Target Ratios).
 
 ---
-
-## Technical Polish & Bug Fixes
-
-- **Type Safety:** Replaced `any` with robust union types (`string | number | null | undefined`) in `CameraScanner.tsx`'s `parseNumeric` helper.
-- **UI Logic:** Hardened the AI result display to handle `0` or `null` values correctly, preventing display glitches like "0gg".
-- **Authentication:** Added a "Forgot Password" flow with Supabase `resetPasswordForEmail` integration.
-- **Profile Persistence:** Integrated weight updates and TDEE syncing directly into the `Profile` component.
-- **Structural Integrity:** Fixed a hydration error in the scanner where a `<div>` was nested inside a `<p>` tag in the calorie hero section.
-
----
-
-## Environment Variables (.env)
-
-- `VITE_SUPABASE_URL`: Supabase project URL.
-- `VITE_SUPABASE_ANON_KEY`: Primary API key.
-
----
-
-## Current Status (March 23, 2026)
-
-- [x] Gemini 3.1 Flash-Lite Integration (Complete)
-- [x] Dropset-style Native UI (Complete)
-- [x] File-Based Routing (TanStack Router) (Complete)
-- [x] Zustand State Management (Complete)
-- [x] PWA Manifest & Icons (Complete)
-- [x] Supabase RLS & Schema (Complete)
-- [x] 5-Item Navigation (Complete)
-- [x] Real-Data Weekly Overview & shadcn Charts (Complete)
-- [x] Historical Logs View (Complete)
-- [x] Path Aliases (@/ prefix) (Complete)
-- [x] Profile Weight & TDEE Sync (Complete)
-- [x] Type-Safe Numeric Parsing (Complete)
-- [x] Forgot Password Flow (Complete)
-- [x] Secure Food Image Storage (Complete)
-- [x] Log Detail View (Complete)
-- [x] System-wide Dark Mode (Complete)
-- [x] Premium Scanner UI & Responsive Fixes (Complete)
-- [ ] User Settings / Profile Editing (Planned)
-- [ ] Custom Macro Goal Settings (Planned)
+*Last Updated: Monday, March 23, 2026*

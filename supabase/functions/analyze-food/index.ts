@@ -1,5 +1,5 @@
-// Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from 'npm:@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,10 +7,16 @@ const corsHeaders = {
 }
 
 interface RequestPayload {
-  image: string;
+  image?: string;
+  description?: string;
 }
 
 console.info('analyze-food server started');
+
+const supabase = createClient(
+  Deno.env.get('SUPABASE_URL')!,
+  Deno.env.get('SB_PUBLISHABLE_KEY')!
+)
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
@@ -18,20 +24,52 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { image }: RequestPayload = await req.json();
+    // 1. Get and Verify JWT using getClaims (fastest method)
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return Response.json({ error: 'No authorization header found' }, { status: 401, headers: corsHeaders })
+    }
+
+    const token = authHeader.replace('Bearer ', '')
+    const { data: { claims }, error: authError } = await supabase.auth.getClaims(token)
+
+    if (authError || !claims) {
+      console.error("Authentication Error:", authError?.message || "Invalid JWT");
+      return Response.json({
+        error: "Unauthorized: Please log in to use AI analysis.",
+        details: authError?.message
+      }, { status: 401, headers: corsHeaders });
+    }
+
+    // 2. Process Request
+    const { image, description }: RequestPayload = await req.json();
 
     const apiKey = Deno.env.get('GEMINI_API_KEY');
     if (!apiKey) throw new Error("GEMINI_API_KEY is not set");
 
-    const mimeMatch = image.match(/^data:([^;]+);base64,(.+)$/);
-    if (!mimeMatch) throw new Error("Invalid image format");
+    let prompt = "Analyze the food. Return ONLY a JSON object with: food_name, calories, protein, carbs, fat, sugar, sodium, cholesterol, serving_size, unit. All nutritional values should be numbers. No formatting, no markdown.";
 
-    const mimeType = mimeMatch[1];
-    const base64Data = mimeMatch[2];
+    if (description) {
+      prompt += ` Specifically consider these details: ${description}. Use them to provide an extremely accurate nutritional breakdown.`;
+    }
 
-    const prompt = "Analyze the food in this image. Return ONLY a JSON object with: food_name, calories, protein, carbs, fat, sugar (g), sodium (mg), cholesterol (mg), serving_size (number), unit (e.g., 'g', 'piece', 'cup'). No formatting, no markdown.";
+    const parts: any[] = [{ text: prompt }];
 
-    // ใช้ Gemini 3.1 Flash-Lite เพื่อความเร็วสูงสุดและประหยัดที่สุด
+    if (image) {
+      const mimeMatch = image.match(/^data:([^;]+);base64,(.+)$/);
+      if (!mimeMatch) throw new Error("Invalid image format");
+
+      const mimeType = mimeMatch[1];
+      const base64Data = mimeMatch[2];
+      parts.push({
+        inline_data: {
+          mime_type: mimeType,
+          data: base64Data
+        }
+      });
+    }
+
+    // 3. Call Gemini AI
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent?key=${apiKey}`;
 
     const geminiResponse = await fetch(url, {
@@ -42,15 +80,7 @@ Deno.serve(async (req: Request) => {
       body: JSON.stringify({
         contents: [
           {
-            parts: [
-              { text: prompt },
-              {
-                inline_data: {
-                  mime_type: mimeType,
-                  data: base64Data
-                }
-              }
-            ]
+            parts: parts
           }
         ],
         generationConfig: {
@@ -66,30 +96,23 @@ Deno.serve(async (req: Request) => {
       const errorDetail = result.error;
       console.error(`Gemini API Error (${status}):`, JSON.stringify(errorDetail, null, 2));
 
-      return new Response(JSON.stringify({
+      return Response.json({
         error: errorDetail?.message || "Gemini API Error",
-        status,
-        suggestion: status === 429 ? "Rate limit hit. Please wait a moment before trying again." : undefined
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Connection': 'keep-alive' },
-        status: status === 429 ? 429 : 500,
-      });
+        status
+      }, { status: status === 429 ? 429 : 500, headers: corsHeaders });
     }
 
     const text = result.candidates[0].content.parts[0].text;
-    console.log("Gemini 3.1 Success:", text);
+    console.log("Gemini Success:", text);
 
     return new Response(text, {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Connection': 'keep-alive' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
 
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "An unexpected error occurred";
     console.error("Edge Function Error:", message);
-    return new Response(JSON.stringify({ error: message }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Connection': 'keep-alive' },
-      status: 500,
-    });
+    return Response.json({ error: message }, { status: 500, headers: corsHeaders });
   }
 });

@@ -3,27 +3,18 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   ChevronLeft,
-  Utensils,
   Clock,
   Calendar,
-  Flame,
-  Zap,
-  Droplets,
-  Trophy,
   Trash2,
-  Loader2
+  Sparkles
 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { NutritionDisplay } from "@/components/NutritionDisplay";
+import type { NutritionData } from "@/components/NutritionDisplay";
 
-interface LogDetail {
+interface LogDetail extends NutritionData {
   id: number;
   food_name: string;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  sugar?: number;
-  sodium?: number;
-  cholesterol?: number;
   image_url: string | null;
   created_at: string;
 }
@@ -37,6 +28,7 @@ function LogDetailPage() {
   const [log, setLog] = useState<LogDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
@@ -49,10 +41,11 @@ function LogDetailPage() {
 
       if (data) {
         setLog(data);
+
         if (data.image_url) {
           const { data: imgData } = await supabase.storage
             .from("food-images")
-            .createSignedUrl(data.image_url, 3600); // 1 hour link
+            .createSignedUrl(data.image_url, 3600);
           if (imgData) setImageUrl(imgData.signedUrl);
         }
       }
@@ -74,13 +67,22 @@ function LogDetailPage() {
       window.history.back();
     } else {
       setIsDeleting(false);
+      alert("Failed to delete log");
     }
   };
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-        <Loader2 className="w-10 h-10 text-purple-500 animate-spin" />
+      <div className="flex flex-col items-center justify-center min-h-screen gap-6 animate-in fade-in duration-700 bg-white dark:bg-zinc-950">
+        <div className="relative w-16 h-16 flex items-center justify-center">
+          <div className="absolute inset-0 border-4 border-purple-500/10 rounded-full" />
+          <div className="absolute inset-0 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+          <Sparkles className="w-6 h-6 text-purple-500 fill-purple-500 animate-pulse" />
+        </div>
+        <div className="space-y-2 text-center">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 dark:text-zinc-500">Fetching Details</p>
+          <p className="text-xl font-black tracking-tighter text-zinc-900 dark:text-white italic animate-pulse">Thinking...</p>
+        </div>
       </div>
     );
   }
@@ -88,12 +90,8 @@ function LogDetailPage() {
   if (!log) {
     return (
       <div className="p-10 text-center space-y-4">
-        <p className="text-zinc-400 font-black uppercase tracking-widest">
-          Log not found
-        </p>
-        <Link to="/logs" className="text-purple-600 font-bold">
-          Go back
-        </Link>
+        <p className="text-zinc-400 font-black uppercase tracking-widest">Log not found</p>
+        <Link to="/logs" className="text-purple-600 font-bold underline underline-offset-4 decoration-2">Go back to History</Link>
       </div>
     );
   }
@@ -101,198 +99,78 @@ function LogDetailPage() {
   const date = new Date(log.created_at);
 
   return (
-    <div className="flex flex-col min-h-full bg-white dark:bg-zinc-950 relative">
-      {/* Fixed Header - Fixed works better in the overflow-y-auto main container */}
-      <div className="fixed top-0 left-0 right-0 z-50 ios-blur bg-white/80 dark:bg-zinc-950/80 px-6 pt-8 pb-4 flex items-center justify-between border-b border-zinc-50 dark:border-white/5 shadow-sm shadow-zinc-50/50">
+    <div className="flex flex-col min-h-full relative">
+      {/* Fixed Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 ios-blur px-6 pt-8 pb-4 flex items-center justify-between border-b border-zinc-50 dark:border-white/5">
         <div className="max-w-md mx-auto w-full flex items-center justify-between">
-          <button
-            onClick={() => window.history.back()}
-            className="w-10 h-10 bg-zinc-50 dark:bg-zinc-900 rounded-2xl flex items-center justify-center text-zinc-900 dark:text-white border border-zinc-100/50 dark:border-white/5 tap-effect"
-          >
-            <ChevronLeft className="w-5 h-5" />
+          <button onClick={() => window.history.back()} className="w-10 h-10 flex items-center justify-center bg-zinc-50 dark:bg-zinc-900 rounded-2xl text-zinc-400 dark:text-zinc-500 tap-effect">
+            <ChevronLeft className="w-6 h-6" />
           </button>
-          <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 dark:text-zinc-500">
-            Meal Detail
-          </h2>
-          <button
-            onClick={handleDelete}
-            disabled={isDeleting}
-            className="w-10 h-10 bg-rose-50 dark:bg-rose-500/10 rounded-2xl flex items-center justify-center text-rose-500 border border-rose-100/50 dark:border-rose-500/20 tap-effect disabled:opacity-50"
+          <div className="text-center">
+            <h1 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-500">History Detail</h1>
+            <p className="text-xs font-black text-zinc-900 dark:text-white mt-0.5 uppercase tracking-widest">
+              {date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+            </p>
+          </div>
+          <button 
+            onClick={handleDelete} 
+            disabled={isDeleting} 
+            className="w-10 h-10 flex items-center justify-center bg-zinc-50 dark:bg-zinc-900 rounded-2xl text-zinc-400 dark:text-zinc-500 hover:text-red-500 transition-colors tap-effect"
           >
-            <Trash2 className="w-4 h-4" />
+            {isDeleting ? <span className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin" /> : <Trash2 className="w-5 h-5" />}
           </button>
         </div>
       </div>
 
-      <div className="pt-24 pb-32 animate-in fade-in slide-in-from-bottom-8 duration-700">
-        <div className="max-w-md mx-auto">
-          <div className="px-6 sm:px-10 space-y-8 mt-4">
-            <div className="relative aspect-square w-full bg-zinc-50 dark:bg-zinc-900 rounded-[56px] overflow-hidden border border-zinc-100 dark:border-white/5 shadow-2xl shadow-zinc-100/50 dark:shadow-none group">
+      <main className="flex-1 pt-24 pb-10">
+        <div className="max-w-md mx-auto px-6 space-y-8">
+          <div className="space-y-4">
+            <div className="relative aspect-square w-full rounded-[48px] overflow-hidden shadow-2xl dark:shadow-none border dark:border-white/10 group">
               {imageUrl ? (
-                <img
-                  src={imageUrl}
-                  alt={log.food_name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
-                />
+                <>
+                  {!imageLoaded && <Skeleton className="absolute inset-0 w-full h-full rounded-[48px] bg-zinc-100 dark:bg-zinc-800 animate-pulse" />}
+                  <img
+                    src={imageUrl}
+                    alt={log.food_name}
+                    onLoad={() => setImageLoaded(true)}
+                    className={`w-full h-full object-cover transition-all duration-700 ${imageLoaded ? "opacity-100 scale-100" : "opacity-0 scale-110"}`}
+                  />
+                </>
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-zinc-200 dark:text-zinc-800">
-                  <Utensils className="w-24 h-24 mb-4" />
-                  <p className="text-[10px] font-black uppercase tracking-widest opacity-50">
-                    No photo available
-                  </p>
+                <div className="w-full h-full bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center text-zinc-200 dark:text-zinc-800">
+                  <Skeleton className="w-full h-full rounded-[48px]" />
                 </div>
               )}
-              <div className="absolute top-8 left-8 bg-zinc-900/40 backdrop-blur-xl px-5 py-2.5 rounded-full border border-white/10">
-                <div className="flex items-center gap-2">
-                  <Trophy className="w-4 h-4 text-yellow-400" />
-                  <span className="text-xs font-black text-white uppercase tracking-widest">
-                    Verified by AI
-                  </span>
-                </div>
+              <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent"></div>
+              <div className="absolute bottom-8 left-8 right-8">
+                <h2 className="text-4xl font-black text-white tracking-tighter italic leading-tight">{log.food_name}</h2>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4 px-2">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-zinc-400" />
+                <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
+                  {date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </p>
+              </div>
+              <div className="w-1 h-1 rounded-full bg-zinc-200 dark:bg-zinc-800"></div>
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-zinc-400" />
+                <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
+                  {date.toLocaleDateString("en-US", { weekday: "long" })}
+                </p>
               </div>
             </div>
           </div>
 
-          {/* Content */}
-          <div className="px-6 sm:px-10 mt-10 space-y-10">
-            <div className="space-y-4">
-              <h1 className="text-5xl sm:text-6xl font-black tracking-tighter text-zinc-900 dark:text-white leading-[0.9] italic">
-                {log.food_name}
-              </h1>
-              <div className="flex flex-wrap gap-4">
-                <div className="flex items-center gap-2 px-4 py-2 bg-zinc-50 dark:bg-zinc-900 rounded-full border border-zinc-100 dark:border-white/5">
-                  <Calendar className="w-3.5 h-3.5 text-zinc-400" />
-                  <span className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">
-                    {date.toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric"
-                    })}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 px-4 py-2 bg-zinc-50 dark:bg-zinc-900 rounded-full border border-zinc-100 dark:border-white/5">
-                  <Clock className="w-3.5 h-3.5 text-zinc-400" />
-                  <span className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">
-                    {date.toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit"
-                    })}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Big KCAL Card */}
-            <div className="bg-zinc-900 dark:bg-zinc-900 p-8 sm:p-10 rounded-[48px] text-white relative overflow-hidden shadow-2xl shadow-purple-200/20 dark:shadow-none border dark:border-white/5">
-              <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/20 blur-[60px] -mr-24 -mt-24" />
-              <div className="relative z-10 flex items-end justify-between">
-                <div>
-                  <p className="text-7xl font-black tracking-tighter leading-none italic">
-                    {Math.round(log.calories)}
-                  </p>
-                  <p className="text-zinc-500 text-[10px] font-black tracking-[0.4em] uppercase mt-2">
-                    Calories Consumed
-                  </p>
-                </div>
-                <div className="w-16 h-16 bg-white/10 rounded-3xl flex items-center justify-center">
-                  <Flame className="w-8 h-8 text-purple-400" />
-                </div>
-              </div>
-            </div>
-
-            {/* Macro Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-              {[
-                {
-                  label: "Protein",
-                  value: log.protein,
-                  unit: "g",
-                  color: "bg-pink-500",
-                  icon: Zap,
-                  iconColor: "text-pink-500"
-                },
-                {
-                  label: "Carbs",
-                  value: log.carbs,
-                  unit: "g",
-                  color: "bg-blue-500",
-                  icon: Droplets,
-                  iconColor: "text-blue-500"
-                },
-                {
-                  label: "Fat",
-                  value: log.fat,
-                  unit: "g",
-                  color: "bg-zinc-900",
-                  icon: Utensils,
-                  iconColor: "text-zinc-400 dark:text-zinc-500"
-                }
-              ].map((macro) => (
-                <div
-                  key={macro.label}
-                  className="bg-zinc-50 dark:bg-zinc-900 p-6 sm:p-8 rounded-[40px] border border-zinc-100 dark:border-white/5 flex sm:flex-col items-center sm:items-start justify-between sm:justify-start gap-4 sm:space-y-4"
-                >
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={`w-12 h-12 bg-white dark:bg-zinc-800 rounded-3xl flex items-center justify-center ${macro.iconColor} shadow-sm shrink-0`}
-                    >
-                      <macro.icon className="w-6 h-6" />
-                    </div>
-                    <div className="sm:hidden">
-                      <p className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
-                        {macro.label}
-                      </p>
-                      <p className="text-2xl font-black text-zinc-900 dark:text-white leading-none">
-                        {Math.round(macro.value || 0)}
-                        {macro.unit}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="hidden sm:block">
-                    <p className="text-3xl font-black text-zinc-900 dark:text-white leading-none">
-                      {Math.round(macro.value || 0)}
-                      {macro.unit}
-                    </p>
-                    <p className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mt-1">
-                      {macro.label}
-                    </p>
-                  </div>
-
-                  <div className="flex-1 max-w-25 sm:max-w-none sm:w-full h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full ${macro.color} rounded-full`}
-                      style={{ width: "60%" }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Detailed Stats */}
-            <div className="bg-zinc-50 dark:bg-zinc-900/50 rounded-[40px] p-8 sm:p-10 border border-zinc-100 dark:border-white/5 space-y-6">
-              <h4 className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.3em] px-2">Detailed Nutrition</h4>
-              <div className="grid grid-cols-1 gap-4">
-                {[
-                  { label: "Sugar", emoji: "🍭", value: log.sugar, unit: "g" },
-                  { label: "Sodium", emoji: "🧂", value: log.sodium, unit: "mg" },
-                  { label: "Cholesterol", emoji: "🍳", value: log.cholesterol, unit: "mg" }
-                ].map((stat) => (
-                  <div key={stat.label} className="flex items-center justify-between px-5 py-4 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-50 dark:border-white/5">
-                    <div className="flex items-center gap-3">
-                      <span className="text-base">{stat.emoji}</span>
-                      <span className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">{stat.label}</span>
-                    </div>
-                    <span className="text-lg font-black text-zinc-900 dark:text-white italic tracking-tight">
-                      {Math.round(stat.value || 0)}{stat.unit}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <NutritionDisplay
+            data={log}
+            isEditing={false}
+            showAIRefine={false}
+          />
         </div>
-      </div>
+      </main>
     </div>
   );
 }

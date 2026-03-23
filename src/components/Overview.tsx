@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { TrendingUp, Target, Sparkles, Loader2 } from "lucide-react";
+import { TrendingUp, Target, Sparkles } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import { supabase } from "../lib/supabase";
 import { Bar, BarChart, XAxis, YAxis, CartesianGrid } from "recharts";
@@ -128,11 +128,20 @@ export function Overview() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
-        <Loader2 className="w-10 h-10 text-purple-500 animate-spin" />
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 dark:text-zinc-500">
-          Loading Insights
-        </p>
+      <div className="flex flex-col items-center justify-center h-[60vh] gap-6 animate-in fade-in duration-700">
+        <div className="relative w-16 h-16 flex items-center justify-center">
+          <div className="absolute inset-0 border-4 border-purple-500/10 rounded-full" />
+          <div className="absolute inset-0 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+          <Sparkles className="w-6 h-6 text-purple-500 fill-purple-500 animate-pulse" />
+        </div>
+        <div className="space-y-2 text-center">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 dark:text-zinc-500">
+            Analyzing Trends
+          </p>
+          <p className="text-xl font-black tracking-tighter text-zinc-900 dark:text-white italic animate-pulse">
+            Thinking...
+          </p>
+        </div>
       </div>
     );
   }
@@ -140,7 +149,7 @@ export function Overview() {
   return (
     <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 space-y-8 pb-10">
       <div className="space-y-2">
-        <h2 className="text-4xl font-black tracking-tight text-zinc-900 dark:text-white mb-2 px-2">
+        <h2 className="text-4xl font-black tracking-tight text-zinc-900 dark:text-white mb-2 px-2 italic">
           Overview
         </h2>
         <div className="flex items-center gap-2 px-2">

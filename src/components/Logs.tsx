@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { Link } from "@tanstack/react-router";
-import { History, Calendar, Utensils } from "lucide-react";
+import { History, Utensils, Sparkles, Clock } from "lucide-react";
+import { Skeleton } from "./ui/skeleton";
 
 interface CalorieLog {
   id: number;
@@ -12,8 +13,36 @@ interface CalorieLog {
   signed_url?: string;
 }
 
+interface GroupedLogs {
+  date: string;
+  isToday: boolean;
+  isYesterday: boolean;
+  totalCalories: number;
+  logs: CalorieLog[];
+}
+
+function ImageWithSkeleton({ src, alt }: { src: string; alt: string }) {
+  const [loaded, setLoaded] = useState(false);
+
+  return (
+    <div className="relative w-full h-full">
+      {!loaded && (
+        <Skeleton className="absolute inset-0 w-full h-full rounded-2xl bg-zinc-100 dark:bg-zinc-800 animate-pulse" />
+      )}
+      <img
+        src={src}
+        alt={alt}
+        onLoad={() => setLoaded(true)}
+        className={`w-full h-full object-cover transition-opacity duration-500 ${
+          loaded ? "opacity-100" : "opacity-0"
+        }`}
+      />
+    </div>
+  );
+}
+
 export function Logs() {
-  const [logs, setLogs] = useState<CalorieLog[]>([]);
+  const [groupedLogs, setGroupedLogs] = useState<GroupedLogs[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,13 +53,12 @@ export function Logs() {
         .order("created_at", { ascending: false });
 
       if (!error && data) {
-        const rawLogs = data as CalorieLog[];
-        const logsWithImages = rawLogs.filter((log) => log.image_url);
+        let enrichedLogs: CalorieLog[] = data;
+        const logsWithImages = enrichedLogs.filter((log) => log.image_url);
 
         if (logsWithImages.length > 0) {
-          const { data: signedData, error: signedError } = await supabase.storage
-            .from("food-images")
-            .createSignedUrls(
+          const { data: signedData, error: signedError } =
+            await supabase.storage.from("food-images").createSignedUrls(
               logsWithImages.map((log) => log.image_url!),
               3600
             );
@@ -39,17 +67,50 @@ export function Logs() {
             const urlMap = new Map(
               logsWithImages.map((log, i) => [log.id, signedData[i].signedUrl])
             );
-            const enrichedLogs = rawLogs.map((log) => ({
+            enrichedLogs = enrichedLogs.map((log) => ({
               ...log,
               signed_url: urlMap.get(log.id)
             }));
-            setLogs(enrichedLogs);
-          } else {
-            setLogs(rawLogs);
           }
-        } else {
-          setLogs(rawLogs);
         }
+
+        // Grouping logic
+        const groups: { [key: string]: GroupedLogs } = {};
+        const now = new Date();
+        const today = now.toLocaleDateString();
+        const yesterday = new Date(
+          now.setDate(now.getDate() - 1)
+        ).toLocaleDateString();
+
+        enrichedLogs.forEach((log) => {
+          const dateObj = new Date(log.created_at);
+          const dateStr = dateObj.toLocaleDateString("en-US", {
+            weekday: "long",
+            month: "short",
+            day: "numeric",
+            year: "numeric"
+          });
+          const key = dateObj.toLocaleDateString();
+
+          if (!groups[key]) {
+            groups[key] = {
+              date: dateStr,
+              isToday: key === today,
+              isYesterday: key === yesterday,
+              totalCalories: 0,
+              logs: []
+            };
+          }
+          groups[key].logs.push(log);
+          groups[key].totalCalories += Number(log.calories);
+        });
+
+        // Convert back to sorted array
+        const sortedGroups = Object.keys(groups)
+          .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
+          .map((key) => groups[key]);
+
+        setGroupedLogs(sortedGroups);
       }
       setLoading(false);
     }
@@ -57,71 +118,124 @@ export function Logs() {
   }, []);
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 space-y-8">
+    <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 space-y-8 pb-6">
       <div className="space-y-2">
-        <h2 className="text-4xl font-black tracking-tight text-zinc-900 dark:text-white mb-2 px-2">
+        <h2 className="text-4xl font-black tracking-tight text-zinc-900 dark:text-white mb-2 px-2 italic">
           History
         </h2>
-        <p className="text-zinc-400 dark:text-zinc-500 font-bold text-xs uppercase tracking-[0.2em] px-2">
-          Past Logs
-        </p>
+        <div className="flex items-center gap-2 px-2">
+          <History className="w-3.5 h-3.5 text-purple-500" />
+          <p className="text-zinc-400 dark:text-zinc-500 font-bold text-[9px] uppercase tracking-[0.25em]">
+            Past meal logs by day
+          </p>
+        </div>
       </div>
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-4">
-          <div className="w-12 h-12 border-4 border-zinc-100 dark:border-white/10 border-t-zinc-900 dark:border-t-white rounded-full animate-spin" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
-            Loading your history
-          </p>
+        <div className="flex flex-col items-center justify-center py-24 gap-6 animate-in fade-in duration-700">
+          <div className="relative w-16 h-16 flex items-center justify-center">
+            <div className="absolute inset-0 border-4 border-purple-500/10 rounded-full" />
+            <div className="absolute inset-0 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+            <Sparkles className="w-6 h-6 text-purple-500 fill-purple-500 animate-pulse" />
+          </div>
+          <div className="space-y-2 text-center">
+            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 dark:text-zinc-500">
+              Retrieving History
+            </p>
+            <p className="text-xl font-black tracking-tighter text-zinc-900 dark:text-white italic animate-pulse">
+              Thinking...
+            </p>
+          </div>
         </div>
-      ) : logs.length === 0 ? (
+      ) : groupedLogs.length === 0 ? (
         <div className="bg-zinc-50 dark:bg-zinc-900/50 rounded-4xl p-12 text-center space-y-4 border border-zinc-100 dark:border-white/10">
           <History className="w-12 h-12 text-zinc-200 dark:text-zinc-800 mx-auto" />
-          <p className="font-black text-zinc-900 dark:text-white">No logs found</p>
+          <p className="font-black text-zinc-900 dark:text-white">
+            No logs found
+          </p>
           <p className="text-xs text-zinc-400 dark:text-zinc-500 font-bold uppercase tracking-widest leading-loose px-4">
             Scan your first meal to see it here
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {logs.map((log) => (
-            <Link
-              key={log.id}
-              to="/logs/$logId"
-              params={{ logId: log.id.toString() }}
-              className="bg-zinc-50 dark:bg-zinc-900/50 p-6 rounded-[40px] border border-zinc-100 dark:border-white/10 flex items-center gap-5 group hover:bg-white dark:hover:bg-zinc-900 hover:border-zinc-200 dark:hover:border-white/20 transition-all shadow-sm active:scale-[0.98]"
-            >
-              <div className="w-14 h-14 bg-white dark:bg-zinc-950 rounded-2xl flex items-center justify-center text-zinc-400 dark:text-zinc-600 group-hover:bg-purple-50 dark:group-hover:bg-purple-900/20 group-hover:text-purple-500 dark:group-hover:text-purple-400 transition-all shadow-sm shrink-0 overflow-hidden">
-                {log.signed_url ? (
-                  <img
-                    src={log.signed_url}
-                    alt={log.food_name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <Utensils className="w-6 h-6" />
-                )}
-              </div>
-              <div className="flex-1">
-                <h4 className="font-black text-zinc-900 dark:text-white text-lg leading-tight truncate max-w-35">
-                  {log.food_name}
-                </h4>
-                <div className="flex items-center gap-1.5 mt-1 text-zinc-400 dark:text-zinc-500">
-                  <Calendar className="w-3 h-3" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest">
-                    {new Date(log.created_at).toLocaleDateString()}
-                  </span>
+        <div className="space-y-12">
+          {groupedLogs.map((group) => (
+            <div key={group.date} className="space-y-6">
+              {/* Date Header */}
+              <div className="flex items-end justify-between px-2">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-purple-500 uppercase tracking-[0.3em]">
+                    {group.isToday
+                      ? "Today"
+                      : group.isYesterday
+                        ? "Yesterday"
+                        : group.date.split(",")[0]}
+                  </p>
+                  <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tighter italic">
+                    {group.isToday || group.isYesterday
+                      ? group.date
+                      : group.date}
+                  </h3>
+                </div>
+                <div className="text-right">
+                  <p className="text-xl font-black text-zinc-900 dark:text-white italic tracking-tighter leading-none">
+                    {Math.round(group.totalCalories)}
+                  </p>
+                  <p className="text-[8px] font-black text-zinc-400 uppercase tracking-widest mt-1">
+                    TOTAL KCAL
+                  </p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-xl font-black text-zinc-900 dark:text-white tracking-tighter">
-                  {Math.round(log.calories)}
-                </p>
-                <p className="text-[8px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mt-0.5">
-                  KCAL
-                </p>
+
+              {/* Logs List */}
+              <div className="space-y-3">
+                {group.logs.map((log) => (
+                  <Link
+                    key={log.id}
+                    to="/logs/$logId"
+                    params={{ logId: log.id.toString() }}
+                    className="bg-zinc-50 dark:bg-zinc-900/50 p-5 rounded-[36px] border border-zinc-100 dark:border-white/10 flex items-center gap-5 group hover:bg-white dark:hover:bg-zinc-900 hover:border-zinc-200 dark:hover:border-white/20 transition-all shadow-sm active:scale-[0.98]"
+                  >
+                    <div className="w-16 h-16 bg-white dark:bg-zinc-950 rounded-2xl flex items-center justify-center text-zinc-400 dark:text-zinc-600 group-hover:bg-purple-50 dark:group-hover:bg-purple-900/20 group-hover:text-purple-500 dark:group-hover:text-purple-400 transition-all shadow-sm shrink-0 overflow-hidden relative">
+                      {log.signed_url ? (
+                        <ImageWithSkeleton
+                          src={log.signed_url}
+                          alt={log.food_name}
+                        />
+                      ) : (
+                        <Utensils className="w-6 h-6" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-lg font-black text-zinc-900 dark:text-white tracking-tighter italic truncate leading-tight">
+                        {log.food_name}
+                      </h4>
+                      <div className="flex items-center gap-3 mt-1.5">
+                        <div className="flex items-center gap-1.5 text-purple-600 dark:text-purple-400">
+                          <Sparkles className="w-3 h-3 fill-purple-500/20" />
+                          <p className="text-sm font-black italic tracking-tight">
+                            {Math.round(log.calories)}{" "}
+                            <span className="text-[10px] not-italic opacity-50 uppercase tracking-widest ml-0.5">
+                              kcal
+                            </span>
+                          </p>
+                        </div>
+                        <div className="w-1 h-1 bg-zinc-200 dark:bg-zinc-800 rounded-full" />
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="w-3 h-3 text-zinc-400" />
+                          <p className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
+                            {new Date(log.created_at).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit"
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       )}

@@ -131,14 +131,26 @@ export const Dashboard: React.FC<{ tdee: number }> = ({ tdee }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="flex flex-col items-center justify-center h-[60vh] gap-6 animate-in fade-in duration-700">
+        <div className="relative w-16 h-16 flex items-center justify-center">
+          <div className="absolute inset-0 border-4 border-purple-500/10 rounded-full" />
+          <div className="absolute inset-0 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+          <Utensils className="w-6 h-6 text-purple-500 fill-purple-500 animate-pulse" />
+        </div>
+        <div className="space-y-2 text-center">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 dark:text-zinc-500">
+            Preparing your Diary
+          </p>
+          <p className="text-xl font-black tracking-tighter text-zinc-900 dark:text-white italic animate-pulse">
+            Thinking...
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-10 pb-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+    <div className="space-y-10 pb-6 animate-in fade-in slide-in-from-bottom-4 duration-1000">
       {/* Header */}
       <div className="flex justify-between items-center px-1">
         <div>
@@ -238,7 +250,7 @@ export const Dashboard: React.FC<{ tdee: number }> = ({ tdee }) => {
             {/* Micro Stats Grid */}
             <div className="grid grid-cols-3 w-full gap-2 px-0">
               <div className="flex flex-col items-center">
-                <div className="w-1 h-1 rounded-full bg-pink-500 mb-2 shadow-[0_0_8px_rgba(236,72,153,0.6)]"></div>
+                <div className="w-2 h-2 rounded-full bg-pink-500 mb-2 shadow-[0_0_8px_rgba(236,72,153,0.6)]"></div>
                 <p className="text-zinc-500 dark:text-zinc-400 text-[8px] sm:text-[9px] font-black tracking-widest uppercase">
                   Protein
                 </p>
@@ -247,7 +259,7 @@ export const Dashboard: React.FC<{ tdee: number }> = ({ tdee }) => {
                 </p>
               </div>
               <div className="flex flex-col items-center border-x border-white/5">
-                <div className="w-1 h-1 rounded-full bg-blue-500 mb-2 shadow-[0_0_8px_rgba(59,130,246,0.6)]"></div>
+                <div className="w-2 h-2 rounded-full bg-blue-500 mb-2 shadow-[0_0_8px_rgba(59,130,246,0.6)]"></div>
                 <p className="text-zinc-500 dark:text-zinc-400 text-[8px] sm:text-[9px] font-black tracking-widest uppercase">
                   Carbs
                 </p>
@@ -256,7 +268,7 @@ export const Dashboard: React.FC<{ tdee: number }> = ({ tdee }) => {
                 </p>
               </div>
               <div className="flex flex-col items-center">
-                <div className="w-1 h-1 rounded-full bg-zinc-600 mb-2"></div>
+                <div className="w-2 h-2 rounded-full bg-zinc-600 mb-2"></div>
                 <p className="text-zinc-500 dark:text-zinc-400 text-[8px] sm:text-[9px] font-black tracking-widest uppercase">
                   Fat
                 </p>
@@ -355,13 +367,12 @@ export const Dashboard: React.FC<{ tdee: number }> = ({ tdee }) => {
                       </p>
                       <span className="w-1 h-1 bg-zinc-200 dark:bg-zinc-800 rounded-full"></span>
                       <p className="text-[9px] font-black text-purple-500 dark:text-purple-400 tracking-widest uppercase truncate max-w-20">
-                        {log.protein && log.protein >= 15 
-                          ? "High Protein" 
-                          : log.calories <= 200 
-                          ? "Low Calorie" 
-                          : "Balanced"}
+                        {log.protein && log.protein >= 15
+                          ? "High Protein"
+                          : log.calories <= 200
+                            ? "Low Calorie"
+                            : "Balanced"}
                       </p>
-
                     </div>
                   </div>
                 </div>

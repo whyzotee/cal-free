@@ -76,7 +76,7 @@ function RootComponent() {
       </main>
 
       {/* iOS Style Bottom Tab Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 px-4 sm:px-6 pb-12 pt-4 ios-blur bg-white/80 dark:bg-zinc-950/80 border-t border-zinc-100/50 dark:border-white/10 transition-colors">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 px-4 sm:px-6 pb-12 pt-4 ios-blur border-t border-zinc-100/50 dark:border-white/10 transition-colors">
         <div className="max-w-md mx-auto flex justify-between items-center">
           {navItems.map((item) => {
             const Icon = item.icon;

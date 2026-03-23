@@ -21,7 +21,7 @@ export function RootComponent() {
         <div className="max-w-md mx-auto min-h-full flex flex-col">
           <Outlet />
           {/* Spacer for Bottom Nav */}
-          <div className="h-44 w-full shrink-0" />
+          <div className="h-32 w-full shrink-0" />
         </div>
       </main>
 
