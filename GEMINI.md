@@ -28,6 +28,10 @@ A premium-feel, high-performance Calorie Tracker PWA built with zero-cost infras
 ### 2. UI/UX Strategy (Dropset Style)
 
 - **Theme:** High-end Fitness App (Inspired by Dropset/iOS Native).
+- **Dark Mode Support:** 
+  - Systematic implementation of `dark:` utility classes across all components.
+  - Theme persistence in `localStorage` with options for **Light**, **Dark**, and **System Default**.
+  - Custom `ios-blur` utility in `index.css` dynamically adjusts for light/dark translucency.
 - **Navigation:** 
   - 5-item iOS Style Bottom Navigation Bar (Diary, Stats, Scan FAB, Logs, Profile).
   - Premium `ios-blur` glassmorphism background and `tap-effect` for tactile feedback.
@@ -40,12 +44,14 @@ A premium-feel, high-performance Calorie Tracker PWA built with zero-cost infras
   - Added `shrink-0` to dashboard icons to prevent layout compression on long text.
   - Implemented vertical stacking in `CameraScanner` results for better input spacing on small screens.
   - Simplified the scan summary by keeping food names static while allowing calorie/macro edits.
+  - Reverted border radius back to original premium state (`rounded-[48px]`, `rounded-4xl`, etc.).
 
 ### 3. State & Routing (Clean Architecture)
 
-- **Zustand:** Centralized store for `session`, `profile`, and `loading` states.
+- **Zustand:** Centralized store for `session`, `profile`, `loading`, and `theme` states.
 - **TanStack Router:** File-Based Routing in `src/routes/`.
 - **Detail View:** Implemented a dynamic route `/logs/$logId` to view detailed meal information, complete with secure image signed-URLs and deletion capability.
+- **Sticky/Fixed Navigation:** Use `fixed top-0` for detail headers to ensure stability within overflow-y containers.
 - **Secure Image Rendering:** Use `supabase.storage.from('bucket').createSignedUrls()` for batch fetching private image URLs in lists (Dashboard/Logs) to ensure RLS compliance while maintaining performance.
 - **Dynamic Tagging:** Food logs are dynamically tagged (e.g., "High Protein" for ≥15g, "Low Calorie" for ≤200kcal) instead of using hardcoded labels.
 
@@ -84,5 +90,6 @@ A premium-feel, high-performance Calorie Tracker PWA built with zero-cost infras
 - [x] Forgot Password Flow (Complete)
 - [x] Secure Food Image Storage (Complete)
 - [x] Log Detail View (Complete)
+- [x] System-wide Dark Mode (Complete)
 - [ ] User Settings / Profile Editing (Planned)
 - [ ] Custom Macro Goal Settings (Planned)

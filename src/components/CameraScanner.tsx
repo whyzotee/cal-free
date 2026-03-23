@@ -159,11 +159,11 @@ export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
       {/* Header */}
       {!image && (
         <div className="space-y-2 mb-4">
-          <h2 className="text-5xl font-black tracking-tighter text-zinc-900 leading-none">
+          <h2 className="text-5xl font-black tracking-tighter text-zinc-900 dark:text-white leading-none">
             Scan <br />
-            <span className="text-purple-600 italic">Food.</span>
+            <span className="text-purple-600 dark:text-purple-400 italic">Food.</span>
           </h2>
-          <p className="text-zinc-400 font-bold text-[10px] tracking-[0.2em] uppercase">
+          <p className="text-zinc-400 dark:text-zinc-500 font-bold text-[10px] tracking-[0.2em] uppercase">
             AI Powered Nutrition Analysis
           </p>
         </div>
@@ -174,14 +174,14 @@ export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
         <div className="grid grid-cols-1 gap-4 flex-1">
           <button
             onClick={() => cameraInputRef.current?.click()}
-            className="group relative overflow-hidden bg-zinc-900 rounded-4xl p-10 flex flex-col items-center justify-center text-white tap-effect shadow-2xl h-64"
+            className="group relative overflow-hidden bg-zinc-900 dark:bg-white rounded-4xl p-10 flex flex-col items-center justify-center text-white dark:text-zinc-900 tap-effect shadow-2xl dark:shadow-none h-64"
           >
             <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/20 blur-[60px] -mr-16 -mt-16"></div>
             <Camera className="w-16 h-16 mb-6 group-hover:scale-110 transition-transform duration-500" />
             <span className="text-2xl font-black tracking-tighter">
               Snap Photo
             </span>
-            <p className="text-zinc-500 text-[10px] font-black tracking-[0.3em] uppercase mt-2">
+            <p className="text-zinc-500 dark:text-zinc-400 text-[10px] font-black tracking-[0.3em] uppercase mt-2">
               Use Camera
             </p>
             <input
@@ -196,10 +196,10 @@ export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
 
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="group bg-zinc-50 border-2 border-dashed border-zinc-200 rounded-4xl p-10 flex flex-col items-center justify-center text-zinc-400 tap-effect hover:bg-white hover:border-purple-200 transition-all h-48"
+            className="group bg-zinc-50 dark:bg-zinc-900/50 border-2 border-dashed border-zinc-200 dark:border-white/10 rounded-4xl p-10 flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-500 tap-effect hover:bg-white dark:hover:bg-zinc-900 hover:border-purple-200 dark:hover:border-purple-900/50 transition-all h-48"
           >
             <Upload className="w-10 h-10 mb-4 group-hover:-translate-y-2 transition-transform duration-500" />
-            <span className="text-lg font-black tracking-tight text-zinc-600">
+            <span className="text-lg font-black tracking-tight text-zinc-600 dark:text-zinc-400">
               Choose from Library
             </span>
             <input
@@ -216,7 +216,7 @@ export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
       {/* State 2 & 3: Preview & Analysis */}
       {image && (
         <div className="flex-1 flex flex-col space-y-6">
-          <div className="relative h-[30vh] md:h-64 rounded-[48px] overflow-hidden shadow-2xl border-4 border-white group">
+          <div className="relative h-[30vh] md:h-64 rounded-[48px] overflow-hidden shadow-2xl border-4 border-white dark:border-zinc-900 group">
             <img
               src={image}
               alt="Food"
@@ -224,13 +224,13 @@ export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
             />
 
             {loading && (
-              <div className="absolute inset-0 bg-zinc-900/80 backdrop-blur-md flex flex-col items-center justify-center text-white z-20">
+              <div className="absolute inset-0 bg-zinc-900/80 dark:bg-zinc-950/80 backdrop-blur-md flex flex-col items-center justify-center text-white z-20">
                 <div className="relative w-20 h-20 mb-6 flex items-center justify-center">
                   <div className="absolute inset-0 border-4 border-purple-500/20 rounded-full"></div>
                   <div className="absolute inset-0 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
                   <Zap className="w-8 h-8 text-purple-400 fill-purple-400 animate-pulse" />
                 </div>
-                <p className="font-black tracking-[0.3em] text-[10px] uppercase text-zinc-400">
+                <p className="font-black tracking-[0.3em] text-[10px] uppercase text-zinc-400 dark:text-zinc-500">
                   Scanning Pixels
                 </p>
                 <p className="text-2xl font-black tracking-tighter mt-1 animate-pulse italic">
@@ -253,7 +253,7 @@ export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
           </div>
 
           {analysis && !loading && (
-            <div className="bg-white rounded-[48px] p-8 border border-zinc-50 shadow-[0_20px_50px_rgba(0,0,0,0.05)] space-y-8 animate-in slide-in-from-bottom-8 duration-700">
+            <div className="bg-white dark:bg-zinc-950 rounded-[48px] p-8 border border-zinc-50 dark:border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.05)] dark:shadow-none space-y-8 animate-in slide-in-from-bottom-8 duration-700">
               <div className="flex flex-col sm:flex-row items-start justify-between gap-6">
                 <div className="space-y-3 w-full sm:flex-1">
                   <div className="flex items-center gap-2">
@@ -262,20 +262,20 @@ export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
                       AI Analysis Complete
                     </span>
                   </div>
-                  <h3 className="text-4xl sm:text-5xl font-black tracking-tighter text-zinc-900 leading-[0.9] italic px-1">
+                  <h3 className="text-4xl sm:text-5xl font-black tracking-tighter text-zinc-900 dark:text-white leading-[0.9] italic px-1">
                     {editableName}
                   </h3>
                   <div className="flex items-center gap-2 px-1">
-                    <div className="w-1.5 h-1.5 bg-zinc-200 rounded-full"></div>
-                    <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
+                    <div className="w-1.5 h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full"></div>
+                    <p className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
                       Standard Serving ({editableServing}{editableUnit})
                     </p>
                   </div>
                 </div>
 
-                <div className="bg-zinc-900 p-8 rounded-3xl text-center w-full sm:w-auto sm:min-w-40 shadow-xl relative overflow-hidden group">
+                <div className="bg-zinc-900 dark:bg-zinc-900/50 p-8 rounded-3xl text-center w-full sm:w-auto sm:min-w-40 shadow-xl dark:shadow-none border dark:border-white/10 relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-20 h-20 bg-purple-500/20 blur-2xl -mr-10 -mt-10" />
-                  <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-2">Total Energy</p>
+                  <p className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-[0.2em] mb-2">Total Energy</p>
                   <div className="flex items-center justify-center gap-1">
                     <input
                       type="number"
@@ -290,8 +290,8 @@ export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
 
 
               <div className="grid grid-cols-3 gap-3">
-                <div className="bg-zinc-50 p-5 rounded-3xl border border-zinc-100/50">
-                  <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">
+                <div className="bg-zinc-50 dark:bg-zinc-900/50 p-5 rounded-3xl border border-zinc-100/50 dark:border-white/10">
+                  <p className="text-[9px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1.5">
                     Protein
                   </p>
                   <div className="flex items-baseline gap-0.5">
@@ -301,16 +301,16 @@ export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
                       onChange={(e) =>
                         setEditableProtein(Number(e.target.value))
                       }
-                      className="text-xl font-black text-zinc-900 bg-transparent w-full outline-none"
+                      className="text-xl font-black text-zinc-900 dark:text-white bg-transparent w-full outline-none"
                     />
-                    <span className="text-[10px] font-bold text-zinc-400">
+                    <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500">
                       g
                     </span>
                   </div>
                   <div className="h-1 bg-pink-500 rounded-full mt-3 w-3/4 opacity-40"></div>
                 </div>
-                <div className="bg-zinc-50 p-5 rounded-3xl border border-zinc-100/50">
-                  <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">
+                <div className="bg-zinc-50 dark:bg-zinc-900/50 p-5 rounded-3xl border border-zinc-100/50 dark:border-white/10">
+                  <p className="text-[9px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1.5">
                     Carbs
                   </p>
                   <div className="flex items-baseline gap-0.5">
@@ -318,16 +318,16 @@ export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
                       type="number"
                       value={editableCarbs}
                       onChange={(e) => setEditableCarbs(Number(e.target.value))}
-                      className="text-xl font-black text-zinc-900 bg-transparent w-full outline-none"
+                      className="text-xl font-black text-zinc-900 dark:text-white bg-transparent w-full outline-none"
                     />
-                    <span className="text-[10px] font-bold text-zinc-400">
+                    <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500">
                       g
                     </span>
                   </div>
                   <div className="h-1 bg-blue-500 rounded-full mt-3 w-3/4 opacity-40"></div>
                 </div>
-                <div className="bg-zinc-50 p-5 rounded-3xl border border-zinc-100/50">
-                  <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">
+                <div className="bg-zinc-50 dark:bg-zinc-900/50 p-5 rounded-3xl border border-zinc-100/50 dark:border-white/10">
+                  <p className="text-[9px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1.5">
                     Fat
                   </p>
                   <div className="flex items-baseline gap-0.5">
@@ -335,22 +335,22 @@ export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
                       type="number"
                       value={editableFat}
                       onChange={(e) => setEditableFat(Number(e.target.value))}
-                      className="text-xl font-black text-zinc-900 bg-transparent w-full outline-none"
+                      className="text-xl font-black text-zinc-900 dark:text-white bg-transparent w-full outline-none"
                     />
-                    <span className="text-[10px] font-bold text-zinc-400">
+                    <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500">
                       g
                     </span>
                   </div>
-                  <div className="h-1 bg-zinc-900 rounded-full mt-3 w-3/4 opacity-40"></div>
+                  <div className="h-1 bg-zinc-900 dark:bg-zinc-700 rounded-full mt-3 w-3/4 opacity-40"></div>
                 </div>
               </div>
 
               <button
                 onClick={saveLog}
                 disabled={loading}
-                className="w-full bg-zinc-900 text-white h-20 rounded-[40px] font-black text-lg shadow-2xl flex items-center justify-center gap-3 tap-effect hover:bg-black transition-all group disabled:opacity-50"
+                className="w-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 h-20 rounded-[40px] font-black text-lg shadow-2xl dark:shadow-none flex items-center justify-center gap-3 tap-effect hover:bg-black dark:hover:bg-zinc-100 transition-all group disabled:opacity-50"
               >
-                <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                <div className="w-10 h-10 bg-white/10 dark:bg-zinc-900/10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
                   {loading ? (
                     <Loader2 className="animate-spin" />
                   ) : (
@@ -358,7 +358,7 @@ export const CameraScanner: React.FC<{ onSave: () => void }> = ({ onSave }) => {
                   )}
                 </div>
                 {loading ? "Logging..." : "Log This Meal"}
-                <ChevronRight className="w-6 h-6 text-zinc-500" />
+                <ChevronRight className="w-6 h-6 text-zinc-500 dark:text-zinc-400" />
               </button>
             </div>
           )}
